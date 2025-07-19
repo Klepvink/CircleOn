@@ -1,0 +1,5 @@
+# NOTES: Example: 25#g7h6* to light up specific squares, 25#* to turn square lights off.
+# NOTES: 26#ISR* turns status LED red, 26#ISG turns status LED green, 26#ISB turns the LED blue
+# NOTES: 0#a2h8 (0#c8u* also works) indicates the move from one square to another. Might get a little weird if used with more squares or multiple times.
+
+# NOTES: Not figured out: 27#po*, 4#*
