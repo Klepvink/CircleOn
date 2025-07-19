@@ -22,3 +22,6 @@ Right now, playing against an AI is not implemented, and third party integration
 BLEAK (https://github.com/hbldh/bleak )-example code is included in this code, especially a modified version of the UART_service.py example script. This was done to allow for the testing of commands sent to and from the board. If you run this script without modification, you can directly enter commands to send to the board in your terminal to test functionality.
 
 AI was used in order to troubleshoot, write and format parts of this code. A rooted Pixel 3a was used to analyze Bluetooth-data sent to and from the SquareOff application.
+
+## Future plans
+I am planning on using this code and other observations for a more user-friendly and portable experience for use with the SquareOff Pro board. I find the board to be awesome, but the app is very limited. I ultimately want to implement the ability to play against specific friends on Lichess, broadcast games happening on the board, and stream against bots running either locally or on a service like Lichess. In the meantime, I accept contributions!
