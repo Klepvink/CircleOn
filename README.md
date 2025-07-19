@@ -1,5 +1,7 @@
 # CircleOn
 CircleOn - Reverse-engineered communicator for the SquareOff Pro chessboard
+> [!CAUTION]
+> This project is an independent open-source set of scripts and functions for integrating with the SquareOff Pro chessboard via BLE. It is not affiliated with nor endorsed by SquareOff and/or Miko.
 
 ## Why?
 These scripts were made to provide additional features to the SquareOff Pro chessboard that are not available in the application. Although this script is not made to be used without modification (it is possible from entrypoint.py, but it is purely for troubleshooting and testing commands), it should provide a complete set of features which can be used to play OTB-games, fetch live game data for use with third party platforms (such as broadcasting on Lichess) and basic checks to verify the legitimacy of moves.
