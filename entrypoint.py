@@ -1,12 +1,6 @@
 import asyncio
 import sys
-from itertools import count, takewhile
-from typing import Iterator
-import time
 from bleak import BleakClient, BleakScanner
-from bleak.backends.characteristic import BleakGATTCharacteristic
-from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
 
 from GeneralHelpers import UART_SERVICE_UUID, UART_TX_CHAR_UUID, UART_RX_CHAR_UUID, sliced
 from SquareOffInstance import SquareOffInstance
