@@ -57,6 +57,5 @@ class ChessBoardUARTHandler:
             await self.send_command(cmd)
             time.sleep(0.5)
 
-
 def sliced(data: bytes, n: int) -> Iterator[bytes]:
     return takewhile(len, (data[i: i + n] for i in count(0, n)))
