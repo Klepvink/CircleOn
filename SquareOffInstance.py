@@ -3,14 +3,11 @@ import chess.pgn
 import asyncio
 
 class SquareOffInstance:
-    def __init__(self, initial_fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
-        self.board = chess.Board(fen=initial_fen)
-        self.game = chess.pgn.Game.from_board(self.board)
+    def __init__(self, chessboardInstance):
+        self.chessboardInstance = chessboardInstance
         self.picked_up_squares = set()
-        self.current_node = self.game
         self.skip_next_diff = False
         self.uart_handler = None
-        self.pgn_export = True
 
     def reorder_file_major_to_rank_major(self, bitboard_string):
         assert len(bitboard_string) == 64, "Bitboard must be exactly 64 characters"
@@ -32,7 +29,7 @@ class SquareOffInstance:
             return {i for i, b in enumerate(bits) if b == '1'}
 
         converted_bits = self.reorder_file_major_to_rank_major(new_board_bits)
-        old_occupied = set(chess.SquareSet(self.board.occupied))
+        old_occupied = set(chess.SquareSet(self.chessboardInstance.board.occupied))
         new_occupied = bitboard_to_set(converted_bits)
 
         moved_from = list(old_occupied - new_occupied)
@@ -47,10 +44,10 @@ class SquareOffInstance:
                 print(f"Blocked move from {moved_from_square_name}: Not picked up.")
                 return None
 
-            for move in self.board.legal_moves:
+            for move in self.chessboardInstance.board.legal_moves:
                 if move.from_square == moved_from[0]:
                     if len(moved_to) == 1 and move.to_square == moved_to[0]:
-                        if self.board.is_capture(move):
+                        if self.chessboardInstance.board.is_capture(move):
                             capture_square_name = chess.square_name(move.to_square)
                             if capture_square_name not in self.picked_up_squares:
                                 print(f"Blocked capture on {capture_square_name}: Target not picked up.")
@@ -60,7 +57,7 @@ class SquareOffInstance:
                             self.skip_next_diff = True
                         return self._push_and_return(move)
                     elif len(moved_to) == 0 and move.to_square in old_occupied:
-                        if self.board.is_capture(move):
+                        if self.chessboardInstance.board.is_capture(move):
                             capture_square_name = chess.square_name(move.to_square)
                             if capture_square_name not in self.picked_up_squares:
                                 print(f"Blocked capture on {capture_square_name}: Target not picked up.")
@@ -80,9 +77,9 @@ class SquareOffInstance:
         if self.is_promotion_move(move):
             move.promotion = self.prompt_for_promotion()
         print(f"Matched move: {move.uci()}")
-        self.board.push(move)
-        if self.current_node is not None:
-            self.current_node = self.current_node.add_variation(move)
+        self.chessboardInstance.board.push(move)
+        if self.chessboardInstance.current_node is not None:
+            self.chessboardInstance.current_node = self.chessboardInstance.current_node.add_variation(move)
         asyncio.create_task(self.on_move_made(move.uci()))
         self.picked_up_squares.clear()
         return move.uci()
@@ -90,7 +87,7 @@ class SquareOffInstance:
 
     # Function called everytime a move is made
     async def on_move_made(self, move):
-        if self.board.is_checkmate():
+        if self.chessboardInstance.board.is_checkmate():
             winner = "Black" if self.board.turn == chess.WHITE else "White"
             print(f"Checkmate! {winner} wins.")
             if self.uart_handler:
@@ -98,27 +95,27 @@ class SquareOffInstance:
                     await self.uart_handler.send_command(b"27#wt*\r\n")
                 if (winner == "Black"):
                     await self.uart_handler.send_command(b"27#bl*\r\n")
-        elif self.board.is_stalemate():
+        elif self.chessboardInstance.board.is_stalemate():
             print("Stalemate. The game is a draw.")
             await self.uart_handler.send_command(b"27#dw*\r\n")
-        elif self.board.is_insufficient_material():
+        elif self.chessboardInstance.board.is_insufficient_material():
             print("Draw due to insufficient material.")
             await self.uart_handler.send_command(b"27#dw*\r\n")
 
-        if self.pgn_export:
+        if self.chessboardInstance.pgn_export:
             exporter = chess.pgn.StringExporter(headers=True, variations=True, comments=True)
-            pgn_text = self.game.accept(exporter)
+            pgn_text = self.chessboardInstance.game.accept(exporter)
             print(pgn_text)
 
     def is_promotion_move(self, move):
-        piece = self.board.piece_at(move.from_square)
+        piece = self.chessboardInstance.board.piece_at(move.from_square)
         if piece and piece.piece_type == chess.PAWN:
             target_rank = chess.square_rank(move.to_square)
             return target_rank == 0 or target_rank == 7
         return False
 
     def is_castling_move(self, move):
-        piece = self.board.piece_at(move.from_square)
+        piece = self.chessboardInstance.board.piece_at(move.from_square)
         if piece and piece.piece_type == chess.KING:
             file_diff = abs(chess.square_file(move.to_square) - chess.square_file(move.from_square))
             return file_diff == 2

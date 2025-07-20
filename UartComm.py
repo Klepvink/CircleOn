@@ -6,11 +6,12 @@ from SquareOffInstance import SquareOffInstance
 from GeneralHelpers import *
 
 class ChessBoardUARTHandler:
-    def __init__(self, client, rx_char, smart_board: SquareOffInstance):
+    def __init__(self, client, rx_char, squareOffInstance: SquareOffInstance, chessboardInstance):
         self.client = client
         self.rx_char = rx_char
-        self.smart_board = smart_board
-        self.smart_board.uart_handler = self
+        self.squareOffInstance = squareOffInstance
+        self.chessboardInstance = chessboardInstance
+        self.squareOffInstance.uart_handler = self
 
     async def CommSuccess(self):
 
@@ -34,8 +35,8 @@ class ChessBoardUARTHandler:
         print("received:", decoded)
         if decoded.startswith("0#") and decoded.endswith("u*"):
             square = decoded[2:-2]
-            self.smart_board.last_pickup_square = square
-            self.smart_board.picked_up_squares.add(square)
+            self.squareOffInstance.last_pickup_square = square
+            self.squareOffInstance.picked_up_squares.add(square)
 
         elif decoded.startswith("0#") and decoded.endswith("d*"):
             await self.send_command(b"30#R*\r\n")
@@ -43,8 +44,8 @@ class ChessBoardUARTHandler:
         elif decoded.startswith("30#") and decoded.endswith("*"):
             new_boardstate = decoded.split('#', 1)[1].rstrip('*')
             print(new_boardstate)
-            self.smart_board.find_uci_move(new_board_bits=new_boardstate)
-            print(self.smart_board.board)
+            self.squareOffInstance.find_uci_move(new_board_bits=new_boardstate)
+            print(self.chessboardInstance.board)
 
     async def send_command(self, data: bytes):
         for s in sliced(data, self.rx_char.max_write_without_response_size):

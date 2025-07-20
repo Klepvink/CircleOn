@@ -5,6 +5,7 @@ from bleak import BleakClient, BleakScanner
 from GeneralHelpers import UART_SERVICE_UUID, UART_TX_CHAR_UUID, UART_RX_CHAR_UUID, sliced
 from SquareOffInstance import SquareOffInstance
 from UartComm import ChessBoardUARTHandler
+from ChessboardInstance import ChessboardInstance
 
 async def uart_terminal():
     device = await BleakScanner.find_device_by_name("Squareoff Pro", cb={"use_bdaddr": True})
@@ -25,11 +26,12 @@ async def uart_terminal():
         nus = client.services.get_service(UART_SERVICE_UUID)
         rx_char = nus.get_characteristic(UART_RX_CHAR_UUID)
 
-        smart_board = SquareOffInstance()
+        smart_board = ChessboardInstance()
+        initSquareOffInstance = SquareOffInstance(smart_board)
+        
+        handler = ChessBoardUARTHandler(client, rx_char, squareOffInstance=initSquareOffInstance, chessboardInstance=smart_board)
 
-        handler = ChessBoardUARTHandler(client, rx_char, smart_board)
         await client.start_notify(UART_TX_CHAR_UUID, handler.handle_rx)
-
         await handler.send_game_start_sequence()
 
         loop = asyncio.get_running_loop()
