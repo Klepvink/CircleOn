@@ -82,7 +82,7 @@ class SquareOffInstance:
         self.chessboardInstance.board.push(move)
         if self.chessboardInstance.current_node is not None:
             self.chessboardInstance.current_node = self.chessboardInstance.current_node.add_variation(move)
-        asyncio.create_task(self.on_move_made(move.uci()))
+        asyncio.create_task(self.on_move_made(move))
         self.picked_up_squares.clear()
         return move.uci()
 
@@ -96,9 +96,11 @@ class SquareOffInstance:
                     await self.uart_handler.send_command(b"27#wt*\r\n")
                 if (winner == "Black"):
                     await self.uart_handler.send_command(b"27#bl*\r\n")
+
         elif self.chessboardInstance.board.is_stalemate():
             print("Stalemate. The game is a draw.")
             await self.uart_handler.send_command(b"27#dw*\r\n")
+            
         elif self.chessboardInstance.board.is_insufficient_material():
             print("Draw due to insufficient material.")
             await self.uart_handler.send_command(b"27#dw*\r\n")
