@@ -19,6 +19,7 @@ class SquareOffInstance:
                 squares[dst_index] = bitboard_string[src_index]
         return ''.join(squares)
 
+    # Converts bitboard string to a valid uci move
     def find_uci_move(self, new_board_bits):
         if self.skip_next_diff:
             print("Skipping move detection due to castling sync.")

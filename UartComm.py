@@ -14,20 +14,6 @@ class ChessBoardUARTHandler:
         self.squareOffInstance.uart_handler = self
 
     async def CommSuccess(self):
-
-        #stop_event = asyncio.Event()
-
-        #async def led_animation():
-        #    while not stop_event.is_set():
-        #        await self.send_command(b"25#d4d5e4e5*\r\n")
-        #        await asyncio.sleep(0.5)
-        #        await self.send_command(b"25#c3c4c5c6d3d6e3e6f3f4f5f6*\r\n")
-        #        await asyncio.sleep(0.5)
-        #        await self.send_command(b"25#b2b3b4b5b6b7c2c7d2d7e2e7f2f7g2g3g4g5g6g7*\r\n")
-        #        await asyncio.sleep(0.5)
-        #        await self.send_command(b"25#a1a2a3a4a5a6a7a8b1b8c1c8d1d8e1e8f1f8g1g8h1h2h3h4h5h6h7h8*\r\n")
-        #        await asyncio.sleep(0.5)
-
         print("Starting game…")
 
     async def handle_rx(self, characteristic, data: bytearray):
