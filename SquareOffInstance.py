@@ -89,7 +89,7 @@ class SquareOffInstance:
     # Function called everytime a move is made
     async def on_move_made(self, move):
         if self.chessboardInstance.board.is_checkmate():
-            winner = "Black" if self.board.turn == chess.WHITE else "White"
+            winner = "Black" if self.chessboardInstance.board.turn == chess.WHITE else "White"
             print(f"Checkmate! {winner} wins.")
             if self.uart_handler:
                 if (winner == "White"):
