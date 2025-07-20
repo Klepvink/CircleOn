@@ -77,7 +77,7 @@ class SquareOffInstance:
 
     def _push_and_return(self, move):
         if self.chessboardInstance.is_promotion_move(move):
-            move.promotion = self.prompt_for_promotion()
+            move.promotion = self.chessboardInstance.prompt_for_promotion()
         print(f"Matched move: {move.uci()}")
         self.chessboardInstance.board.push(move)
         if self.chessboardInstance.current_node is not None:
