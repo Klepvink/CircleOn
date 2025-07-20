@@ -52,29 +52,31 @@ class SquareOffInstance:
                             if capture_square_name not in self.picked_up_squares:
                                 print(f"Blocked capture on {capture_square_name}: Target not picked up.")
                                 continue
-                        if self.is_castling_move(move):
+
+                        if self.chessboardInstance.is_castling_move(move):
                             print("Castling detected, waiting for rook move.")
                             self.skip_next_diff = True
-                        return self._push_and_return(move)
+                        return move
+                    
                     elif len(moved_to) == 0 and move.to_square in old_occupied:
                         if self.chessboardInstance.board.is_capture(move):
                             capture_square_name = chess.square_name(move.to_square)
                             if capture_square_name not in self.picked_up_squares:
                                 print(f"Blocked capture on {capture_square_name}: Target not picked up.")
                                 continue
-                        return self._push_and_return(move)
+                        return move
 
         if len(moved_from) == 2 and len(moved_to) == 1:
             for move in self.board.legal_moves:
                 if self.board.is_en_passant(move):
                     if move.to_square == moved_to[0] and move.from_square in moved_from:
                         print("En Passant detected.")
-                        return self._push_and_return(move)
+                        return move
 
         raise ValueError("No legal move found matching diff.")
 
     def _push_and_return(self, move):
-        if self.is_promotion_move(move):
+        if self.chessboardInstance.is_promotion_move(move):
             move.promotion = self.prompt_for_promotion()
         print(f"Matched move: {move.uci()}")
         self.chessboardInstance.board.push(move)
@@ -83,7 +85,6 @@ class SquareOffInstance:
         asyncio.create_task(self.on_move_made(move.uci()))
         self.picked_up_squares.clear()
         return move.uci()
-
 
     # Function called everytime a move is made
     async def on_move_made(self, move):
@@ -106,30 +107,3 @@ class SquareOffInstance:
             exporter = chess.pgn.StringExporter(headers=True, variations=True, comments=True)
             pgn_text = self.chessboardInstance.game.accept(exporter)
             print(pgn_text)
-
-    def is_promotion_move(self, move):
-        piece = self.chessboardInstance.board.piece_at(move.from_square)
-        if piece and piece.piece_type == chess.PAWN:
-            target_rank = chess.square_rank(move.to_square)
-            return target_rank == 0 or target_rank == 7
-        return False
-
-    def is_castling_move(self, move):
-        piece = self.chessboardInstance.board.piece_at(move.from_square)
-        if piece and piece.piece_type == chess.KING:
-            file_diff = abs(chess.square_file(move.to_square) - chess.square_file(move.from_square))
-            return file_diff == 2
-        return False
-
-    def prompt_for_promotion(self):
-        promotion_map = {
-            'q': chess.QUEEN,
-            'r': chess.ROOK,
-            'b': chess.BISHOP,
-            'n': chess.KNIGHT
-        }
-        while True:
-            choice = input("Promote pawn to (q, r, b, n): ").lower()
-            if choice in promotion_map:
-                return promotion_map[choice]
-            print("Invalid choice. Please enter q, r, b, or n.")

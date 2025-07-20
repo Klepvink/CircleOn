@@ -44,7 +44,10 @@ class ChessBoardUARTHandler:
         elif decoded.startswith("30#") and decoded.endswith("*"):
             new_boardstate = decoded.split('#', 1)[1].rstrip('*')
             print(new_boardstate)
-            self.squareOffInstance.find_uci_move(new_board_bits=new_boardstate)
+            madeMove = self.squareOffInstance.find_uci_move(new_board_bits=new_boardstate)
+            if madeMove:
+                self.squareOffInstance._push_and_return(madeMove)
+
             print(self.chessboardInstance.board)
 
     async def send_command(self, data: bytes):

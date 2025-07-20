@@ -7,3 +7,30 @@ class ChessboardInstance:
         self.game = chess.pgn.Game.from_board(self.board)
         self.current_node = self.game
         self.pgn_export = True
+
+    def is_promotion_move(self, move):
+        piece = self.board.piece_at(move.from_square)
+        if piece and piece.piece_type == chess.PAWN:
+            target_rank = chess.square_rank(move.to_square)
+            return target_rank == 0 or target_rank == 7
+        return False
+
+    def is_castling_move(self, move):
+        piece = self.board.piece_at(move.from_square)
+        if piece and piece.piece_type == chess.KING:
+            file_diff = abs(chess.square_file(move.to_square) - chess.square_file(move.from_square))
+            return file_diff == 2
+        return False
+
+    def prompt_for_promotion(self):
+        promotion_map = {
+            'q': chess.QUEEN,
+            'r': chess.ROOK,
+            'b': chess.BISHOP,
+            'n': chess.KNIGHT
+        }
+        while True:
+            choice = input("Promote pawn to (q, r, b, n): ").lower()
+            if choice in promotion_map:
+                return promotion_map[choice]
+            print("Invalid choice. Please enter q, r, b, or n.")  
