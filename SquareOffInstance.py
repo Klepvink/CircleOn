@@ -73,7 +73,7 @@ class SquareOffInstance:
                     if move.to_square == moved_to[0] and move.from_square in moved_from:
                         print("En Passant detected.")
                         return move
-
+                    
         raise ValueError("No legal move found matching diff.")
 
     def _push_and_return(self, move):
