@@ -32,7 +32,13 @@ class ChessBoardUARTHandler:
             print(new_boardstate)
             madeMove = self.squareOffInstance.find_uci_move(new_board_bits=new_boardstate)
             if madeMove:
+                # TODO: Check state if a player should have made a move, or bot.
+                # TODO: If player, convert boardstate to UCI and make a move on the chess.Board
+                # TODO: If bot, make move on board based on engine output, and wait for
+                # TODO: physical boardstate to represent the new chess.Board setup.
                 self.squareOffInstance._push_and_return(madeMove)
+                if (new_boardstate == self.chessboardInstance.board_to_occupation_string()):
+                    print("Boards are equal, everything looks fine")
 
             print(self.chessboardInstance.board)
 

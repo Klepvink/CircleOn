@@ -34,3 +34,11 @@ class ChessboardInstance:
             if choice in promotion_map:
                 return promotion_map[choice]
             print("Invalid choice. Please enter q, r, b, or n.")  
+    
+    def board_to_occupation_string(self) -> str:
+        occupation = ""
+        for file in range(8):
+            for rank in range(8):
+                square = chess.square(file, rank)
+                occupation += "1" if self.board.piece_at(square) else "0"
+        return occupation

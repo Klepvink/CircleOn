@@ -9,6 +9,7 @@ class SquareOffInstance:
         self.skip_next_diff = False
         self.uart_handler = None
         self.skip_engine_on_next_move = False
+        self.turn = "white"
 
     def reorder_file_major_to_rank_major(self, bitboard_string):
         assert len(bitboard_string) == 64, "Bitboard must be exactly 64 characters"
@@ -24,7 +25,12 @@ class SquareOffInstance:
     def find_uci_move(self, new_board_bits):
         if self.skip_next_diff:
             print("Skipping move detection due to castling sync.")
+
+            if new_board_bits == self.chessboardInstance.board_to_occupation_string():
+                print("Boards are equal, everything looks fine")
+            
             self.check_engine_turn()
+
             self.skip_next_diff = False
             return None
 
@@ -71,8 +77,8 @@ class SquareOffInstance:
                         return move
 
         if len(moved_from) == 2 and len(moved_to) == 1:
-            for move in self.board.legal_moves:
-                if self.board.is_en_passant(move):
+            for move in self.chessboardInstance.board.legal_moves:
+                if self.chessboardInstance.board.is_en_passant(move):
                     if move.to_square == moved_to[0] and move.from_square in moved_from:
                         print("En Passant detected.")
                         return move
@@ -83,17 +89,23 @@ class SquareOffInstance:
         if self.chessboardInstance.is_promotion_move(move):
             move.promotion = self.chessboardInstance.prompt_for_promotion()
         print(f"Matched move: {move.uci()}")
+
         self.chessboardInstance.board.push(move)
         if self.chessboardInstance.current_node is not None:
             self.chessboardInstance.current_node = self.chessboardInstance.current_node.add_variation(move)
+
         asyncio.create_task(self.on_move_made(move))
+
         self.picked_up_squares.clear()
+
         return move.uci()
     
     def check_engine_turn(self):
         if self.chessboardInstance.board.turn == chess.WHITE:
+            self.turn = "white"
             print("White's turn")
         elif self.chessboardInstance.board.turn == chess.BLACK:
+            self.turn = "black"
             print("Black's turn")
 
     # Function called everytime a move is made
