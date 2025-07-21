@@ -11,6 +11,9 @@ class SquareOffInstance:
         self.skip_engine_on_next_move = False
         self.turn = "white"
 
+        # Experimental until settings can be provided
+        self.bots = ["white", "black"]
+
     def reorder_file_major_to_rank_major(self, bitboard_string):
         assert len(bitboard_string) == 64, "Bitboard must be exactly 64 characters"
         squares = [''] * 64
@@ -26,10 +29,13 @@ class SquareOffInstance:
         if self.skip_next_diff:
             print("Skipping move detection due to castling sync.")
 
+            exporter = chess.pgn.StringExporter(headers=True, variations=True, comments=True)
+            pgn_text = self.chessboardInstance.game.accept(exporter)
+            
             if new_board_bits == self.chessboardInstance.board_to_occupation_string():
                 print("Boards are equal, everything looks fine")
             
-            self.check_engine_turn()
+            self.check_engine_turn(pgn_text)
 
             self.skip_next_diff = False
             return None
@@ -100,7 +106,7 @@ class SquareOffInstance:
 
         return move.uci()
     
-    def check_engine_turn(self):
+    def check_engine_turn(self, pgn_text):
         if self.chessboardInstance.board.turn == chess.WHITE:
             self.turn = "white"
             print("White's turn")
@@ -110,6 +116,9 @@ class SquareOffInstance:
 
     # Function called everytime a move is made
     async def on_move_made(self, move):
+        exporter = chess.pgn.StringExporter(headers=True, variations=True, comments=True)
+        pgn_text = self.chessboardInstance.game.accept(exporter)
+
         if self.skip_engine_on_next_move:
             print("Skipping engine move after castling rook move.")
             self.skip_engine_on_next_move = False
@@ -133,8 +142,6 @@ class SquareOffInstance:
             await self.uart_handler.send_command(b"27#dw*\r\n")
 
         if self.chessboardInstance.pgn_export:
-            exporter = chess.pgn.StringExporter(headers=True, variations=True, comments=True)
-            pgn_text = self.chessboardInstance.game.accept(exporter)
             print(pgn_text)
                     
-        self.check_engine_turn()
+        self.check_engine_turn(pgn_text=pgn_text)

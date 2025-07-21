@@ -7,6 +7,10 @@ from SquareOffInstance import SquareOffInstance
 from UartComm import ChessBoardUARTHandler
 from ChessboardInstance import ChessboardInstance
 
+from GeneralHelpers import bitboard_index_to_squares
+
+starting_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
 async def uart_terminal():
     device = await BleakScanner.find_device_by_name("Squareoff Pro", cb={"use_bdaddr": True})
 
@@ -26,7 +30,7 @@ async def uart_terminal():
         nus = client.services.get_service(UART_SERVICE_UUID)
         rx_char = nus.get_characteristic(UART_RX_CHAR_UUID)
 
-        smart_board = ChessboardInstance()
+        smart_board = ChessboardInstance(initial_fen=starting_fen)
         initSquareOffInstance = SquareOffInstance(smart_board)
         
         handler = ChessBoardUARTHandler(client, rx_char, squareOffInstance=initSquareOffInstance, chessboardInstance=smart_board)
@@ -35,7 +39,7 @@ async def uart_terminal():
         await handler.send_game_start_sequence()
 
         # First move, check to see who's turn it is
-        initSquareOffInstance.check_engine_turn()
+        initSquareOffInstance.check_engine_turn(starting_fen)
 
         loop = asyncio.get_running_loop()
         while True:

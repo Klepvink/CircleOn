@@ -3,7 +3,7 @@ from typing import Iterator
 import time
 
 from SquareOffInstance import SquareOffInstance
-from GeneralHelpers import *
+import GeneralHelpers
 
 class ChessBoardUARTHandler:
     def __init__(self, client, rx_char, squareOffInstance: SquareOffInstance, chessboardInstance):
@@ -30,15 +30,19 @@ class ChessBoardUARTHandler:
         elif decoded.startswith("30#") and decoded.endswith("*"):
             new_boardstate = decoded.split('#', 1)[1].rstrip('*')
             print(new_boardstate)
+
             madeMove = self.squareOffInstance.find_uci_move(new_board_bits=new_boardstate)
+
             if madeMove:
                 # TODO: Check state if a player should have made a move, or bot.
                 # TODO: If player, convert boardstate to UCI and make a move on the chess.Board
                 # TODO: If bot, make move on board based on engine output, and wait for
                 # TODO: physical boardstate to represent the new chess.Board setup.
                 self.squareOffInstance._push_and_return(madeMove)
-                if (new_boardstate == self.chessboardInstance.board_to_occupation_string()):
-                    print("Boards are equal, everything looks fine")
+                if (new_boardstate != self.chessboardInstance.board_to_occupation_string()):
+                    diff_squares = GeneralHelpers.bitboard_index_to_squares([i for i in range(len(new_boardstate)) if new_boardstate[i] != self.chessboardInstance.board_to_occupation_string()[i]])
+                    print(diff_squares)
+                    await self.send_command(f"25#{"".join(diff_squares)}*".encode())
 
             print(self.chessboardInstance.board)
 
