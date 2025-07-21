@@ -6,12 +6,14 @@ from SquareOffInstance import SquareOffInstance
 import GeneralHelpers
 
 class ChessBoardUARTHandler:
-    def __init__(self, client, rx_char, squareOffInstance: SquareOffInstance, chessboardInstance):
+    def __init__(self, client, rx_char, squareOffInstance: SquareOffInstance, chessboardInstance, engineInstance):
         self.client = client
         self.rx_char = rx_char
         self.squareOffInstance = squareOffInstance
         self.chessboardInstance = chessboardInstance
         self.squareOffInstance.uart_handler = self
+        self.engineInstance = engineInstance
+        self.engineInstance.uartInstance = self
 
     async def CommSuccess(self):
         print("Starting game…")
@@ -31,7 +33,7 @@ class ChessBoardUARTHandler:
             new_boardstate = decoded.split('#', 1)[1].rstrip('*')
             print(new_boardstate)
 
-            madeMove = self.squareOffInstance.find_uci_move(new_board_bits=new_boardstate)
+            madeMove = await self.squareOffInstance.find_uci_move(new_board_bits=new_boardstate)
 
             if madeMove:
                 # TODO: Check state if a player should have made a move, or bot.
@@ -43,6 +45,7 @@ class ChessBoardUARTHandler:
                     diff_squares = GeneralHelpers.bitboard_index_to_squares([i for i in range(len(new_boardstate)) if new_boardstate[i] != self.chessboardInstance.board_to_occupation_string()[i]])
                     print(diff_squares)
                     await self.send_command(f"25#{"".join(diff_squares)}*".encode())
+                    diff_squares = []
 
             print(self.chessboardInstance.board)
 

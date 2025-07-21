@@ -3,8 +3,10 @@ import chess.pgn
 import asyncio
 
 class SquareOffInstance:
-    def __init__(self, chessboardInstance):
+    def __init__(self, chessboardInstance, engineInstance):
+        self.engineInstance = engineInstance
         self.chessboardInstance = chessboardInstance
+        self.bitboardState = "1100001111000011110000111100001111000011110000111100001111000011"
         self.picked_up_squares = set()
         self.skip_next_diff = False
         self.uart_handler = None
@@ -12,7 +14,7 @@ class SquareOffInstance:
         self.turn = "white"
 
         # Experimental until settings can be provided
-        self.bots = ["white", "black"]
+        self.bots = ["black"]
 
     def reorder_file_major_to_rank_major(self, bitboard_string):
         assert len(bitboard_string) == 64, "Bitboard must be exactly 64 characters"
@@ -25,17 +27,15 @@ class SquareOffInstance:
         return ''.join(squares)
 
     # Converts bitboard string to a valid uci move
-    def find_uci_move(self, new_board_bits):
+    async def find_uci_move(self, new_board_bits):
+        self.bitboardState = new_board_bits
         if self.skip_next_diff:
             print("Skipping move detection due to castling sync.")
 
-            exporter = chess.pgn.StringExporter(headers=True, variations=True, comments=True)
-            pgn_text = self.chessboardInstance.game.accept(exporter)
-            
             if new_board_bits == self.chessboardInstance.board_to_occupation_string():
                 print("Boards are equal, everything looks fine")
             
-            self.check_engine_turn(pgn_text)
+            await self.check_engine_turn()
 
             self.skip_next_diff = False
             return None
@@ -106,19 +106,21 @@ class SquareOffInstance:
 
         return move.uci()
     
-    def check_engine_turn(self, pgn_text):
+    async def check_engine_turn(self):
         if self.chessboardInstance.board.turn == chess.WHITE:
             self.turn = "white"
             print("White's turn")
         elif self.chessboardInstance.board.turn == chess.BLACK:
             self.turn = "black"
             print("Black's turn")
+        if self.turn in self.bots:
 
+            # Make bot move
+            move = self.engineInstance.pass_boardstate(self.chessboardInstance.board.fen())
+            await self.engineInstance._pass_and_return(move)
+            
     # Function called everytime a move is made
     async def on_move_made(self, move):
-        exporter = chess.pgn.StringExporter(headers=True, variations=True, comments=True)
-        pgn_text = self.chessboardInstance.game.accept(exporter)
-
         if self.skip_engine_on_next_move:
             print("Skipping engine move after castling rook move.")
             self.skip_engine_on_next_move = False
@@ -140,8 +142,5 @@ class SquareOffInstance:
         elif self.chessboardInstance.board.is_insufficient_material():
             print("Draw due to insufficient material.")
             await self.uart_handler.send_command(b"27#dw*\r\n")
-
-        if self.chessboardInstance.pgn_export:
-            print(pgn_text)
                     
-        self.check_engine_turn(pgn_text=pgn_text)
+        await self.check_engine_turn()

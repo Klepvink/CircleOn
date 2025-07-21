@@ -6,6 +6,7 @@ from GeneralHelpers import UART_SERVICE_UUID, UART_TX_CHAR_UUID, UART_RX_CHAR_UU
 from SquareOffInstance import SquareOffInstance
 from UartComm import ChessBoardUARTHandler
 from ChessboardInstance import ChessboardInstance
+from EngineInstance import EngineInstance
 
 from GeneralHelpers import bitboard_index_to_squares
 
@@ -31,15 +32,16 @@ async def uart_terminal():
         rx_char = nus.get_characteristic(UART_RX_CHAR_UUID)
 
         smart_board = ChessboardInstance(initial_fen=starting_fen)
-        initSquareOffInstance = SquareOffInstance(smart_board)
+        engineInstance = EngineInstance(chessboardInstance=smart_board)
+        initSquareOffInstance = SquareOffInstance(chessboardInstance=smart_board, engineInstance=engineInstance)
         
-        handler = ChessBoardUARTHandler(client, rx_char, squareOffInstance=initSquareOffInstance, chessboardInstance=smart_board)
+        handler = ChessBoardUARTHandler(client, rx_char, squareOffInstance=initSquareOffInstance, chessboardInstance=smart_board, engineInstance=engineInstance)
 
         await client.start_notify(UART_TX_CHAR_UUID, handler.handle_rx)
         await handler.send_game_start_sequence()
 
         # First move, check to see who's turn it is
-        initSquareOffInstance.check_engine_turn(starting_fen)
+        await initSquareOffInstance.check_engine_turn()
 
         loop = asyncio.get_running_loop()
         while True:
