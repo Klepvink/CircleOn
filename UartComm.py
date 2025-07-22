@@ -1,7 +1,12 @@
-from itertools import count, takewhile
-from typing import Iterator
+"""
+Contains functions which are called on changing states on 
+the SquareOff Pro board (pieces being moved, or the state
+of the board being communicated). 
+"""
+
 import time
 import chess
+import chess.pgn
 
 from SquareOffInstance import SquareOffInstance
 import GeneralHelpers
@@ -42,8 +47,8 @@ class ChessBoardUARTHandler:
         # Triggers in response to current state request 
         elif decoded.startswith("30#") and decoded.endswith("*"):
             new_boardstate = decoded.split('#', 1)[1].rstrip('*')
+            
             print(new_boardstate)
-
             # Communicate the new state of the board as presented by SquareOff to the engine, to allow the engine to light up
             # specific squares on the board.
             self.engineInstance.originalBitboard = new_boardstate
@@ -58,18 +63,24 @@ class ChessBoardUARTHandler:
                 # TODO: Move logic from SquareOff class to UartComm
                 self.squareOffInstance._push_and_return(madeMove)
 
-                # Check if the physical location of pieces matches with the expected occupied spaces on the ChessboardInstance.
-                if (new_boardstate != self.chessboardInstance.board_to_occupation_string()):
-                    diff_squares = GeneralHelpers.bitboard_index_to_squares([i for i in range(len(new_boardstate)) if new_boardstate[i] != self.chessboardInstance.board_to_occupation_string()[i]])
-                    print(diff_squares)
+            # Check if the physical location of pieces matches with the expected occupied spaces on the ChessboardInstance.
+            if (new_boardstate != self.chessboardInstance.board_to_occupation_string()):
+                diff_squares = GeneralHelpers.bitboard_index_to_squares([i for i in range(len(new_boardstate)) if new_boardstate[i] != self.chessboardInstance.board_to_occupation_string()[i]])
+                print(diff_squares)
 
-                    # Light up mismatching LED's on the SquareOff board
-                    await self.send_command(f"25#{"".join(diff_squares)}*".encode())
-                    diff_squares = []
+                # Light up mismatching LED's on the SquareOff board
+                await self.send_command(f"25#{"".join(diff_squares)}*".encode())
+                diff_squares = []
             
             # If boardstates are matching (physical and ChessboardInstance, check if game is over). This is done here, to prevent
             # a winner being indicated prematurely.
             if (new_boardstate == self.chessboardInstance.board_to_occupation_string()):
+                
+                # Debug purposes, print state of the ChessboardInstance
+                exporter = chess.pgn.StringExporter(headers=True, variations=True, comments=True)
+                pgn_text = self.chessboardInstance.game.accept(exporter)
+                print(pgn_text)
+
                 if self.chessboardInstance.board.is_checkmate():
                     winner = "Black" if self.chessboardInstance.board.turn == chess.WHITE else "White"
                     print(f"Checkmate! {winner} wins.")
@@ -81,9 +92,8 @@ class ChessBoardUARTHandler:
                 elif self.chessboardInstance.board.is_stalemate() or self.chessboardInstance.board.is_insufficient_material():
                     print("The game is a draw.")
                     await self.send_command(b"27#dw*\r\n")
-
-            # Debug purposes, print state of the ChessboardInstance
-            print(self.chessboardInstance.board)
+                
+                await self.squareOffInstance.on_move_made()
 
     async def send_command(self, data: bytes):
         for s in GeneralHelpers.sliced(data, self.rx_char.max_write_without_response_size):

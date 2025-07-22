@@ -2,6 +2,8 @@ import chess
 import chess.pgn
 import asyncio
 
+import GeneralHelpers 
+
 class SquareOffInstance:
     def __init__(self, chessboardInstance, engineInstance):
         self.engineInstance = engineInstance
@@ -13,7 +15,8 @@ class SquareOffInstance:
         self.skip_engine_on_next_move = False
         self.turn = "white"
 
-        # Experimental until settings can be provided
+        # Modify to suit your needs. Engine vs engine is possible, either color to be an engine, or clear the list to play OTB.
+        # self.bots = ["white", "black"]
         self.bots = []
 
     def reorder_file_major_to_rank_major(self, bitboard_string):
@@ -32,8 +35,13 @@ class SquareOffInstance:
         if self.skip_next_diff:
             print("Skipping move detection due to castling sync.")
 
-            if new_board_bits == self.chessboardInstance.board_to_occupation_string():
-                print("Boards are equal, everything looks fine")
+            if new_board_bits != self.chessboardInstance.board_to_occupation_string():
+                    diff_squares = GeneralHelpers.bitboard_index_to_squares([i for i in range(len(new_board_bits)) if new_board_bits[i] != self.chessboardInstance.board_to_occupation_string()[i]])
+                    print(diff_squares)
+
+                    # Light up mismatching LED's on the SquareOff board
+                    await self.uart_handler.send_command(f"25#{"".join(diff_squares)}*".encode())
+                    diff_squares = []
             
             await self.check_engine_turn()
 
@@ -88,7 +96,11 @@ class SquareOffInstance:
                     if move.to_square == moved_to[0] and move.from_square in moved_from:
                         print("En Passant detected.")
                         return move
-                    
+
+        if self.turn in self.bots:
+            print(f"Bot turn for {self.turn}, not taken into consideration as player move")
+            return
+        
         raise ValueError("No legal move found matching diff.")
 
     def _push_and_return(self, move):
@@ -99,8 +111,6 @@ class SquareOffInstance:
         self.chessboardInstance.board.push(move)
         if self.chessboardInstance.current_node is not None:
             self.chessboardInstance.current_node = self.chessboardInstance.current_node.add_variation(move)
-
-        asyncio.create_task(self.on_move_made(move))
 
         self.picked_up_squares.clear()
 
@@ -120,9 +130,10 @@ class SquareOffInstance:
             await self.engineInstance._pass_and_return(move)
             
     # Function called everytime a move is made
-    async def on_move_made(self, move):
+    async def on_move_made(self):
         if self.skip_engine_on_next_move:
             print("Skipping engine move after castling rook move.")
             self.skip_engine_on_next_move = False
             return  
+
         await self.check_engine_turn()
