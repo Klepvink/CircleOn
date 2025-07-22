@@ -8,18 +8,25 @@ import time
 import chess
 import chess.pgn
 
-from SquareOffInstance import SquareOffInstance
 import GeneralHelpers
 
 class ChessBoardUARTHandler:
-    def __init__(self, client, rx_char, squareOffInstance: SquareOffInstance, chessboardInstance, engineInstance):
+    def __init__(self, client, rx_char, squareOffInstance, chessboardInstance, engineInstance):
         self.client = client
         self.rx_char = rx_char
-        self.squareOffInstance = squareOffInstance
+
         self.chessboardInstance = chessboardInstance
-        self.squareOffInstance.uart_handler = self
+
+        self.squareOffInstance = squareOffInstance
         self.engineInstance = engineInstance
-        self.engineInstance.uart_handler = self
+
+        self.squareOffInstance.uart_handler = self
+
+        # Check if playing against the engine is expected
+        if len(self.squareOffInstance.bots) > 0:
+            self.squareOffInstance.engineInstance = self.engineInstance
+            self.engineInstance.uart_handler = self
+
 
     # Function is called on succesful connection to the SquareOff board.
     async def CommSuccess(self):
@@ -86,12 +93,15 @@ class ChessBoardUARTHandler:
                     print(f"Checkmate! {winner} wins.")
                     if (winner == "White"):
                         await self.send_command(b"27#wt*\r\n")
+                        exit()
                     if (winner == "Black"):
                         await self.send_command(b"27#bl*\r\n")
+                        exit()
 
                 elif self.chessboardInstance.board.is_stalemate() or self.chessboardInstance.board.is_insufficient_material():
                     print("The game is a draw.")
                     await self.send_command(b"27#dw*\r\n")
+                    exit()
                 
                 await self.squareOffInstance.on_move_made()
 

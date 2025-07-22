@@ -1,23 +1,31 @@
+"""
+Contains logic for parsing SquareOff events, and
+preventing false positives.
+"""
+
 import chess
-import chess.pgn
-import asyncio
 
 import GeneralHelpers 
 
 class SquareOffInstance:
-    def __init__(self, chessboardInstance, engineInstance):
-        self.engineInstance = engineInstance
+    def __init__(self, chessboardInstance):
         self.chessboardInstance = chessboardInstance
+        self.uart_handler = None
+
+        # By default, don't use the engine if not needed
+        self.engineInstance = None
+
+        # Assuming default bitboard unless explicitely set
         self.bitboardState = "11000011" * 8
         self.picked_up_squares = set()
+
         self.skip_next_diff = False
-        self.uart_handler = None
         self.skip_engine_on_next_move = False
         self.turn = "white"
 
         # Modify to suit your needs. Engine vs engine is possible, either color to be an engine, or clear the list to play OTB.
         # self.bots = ["white", "black"]
-        self.bots = []
+        self.bots = ["black"]
 
     def reorder_file_major_to_rank_major(self, bitboard_string):
         assert len(bitboard_string) == 64, "Bitboard must be exactly 64 characters"
@@ -123,8 +131,8 @@ class SquareOffInstance:
         elif self.chessboardInstance.board.turn == chess.BLACK:
             self.turn = "black"
             print("Black's turn")
-        if self.turn in self.bots:
 
+        if len(self.bots) > 0 and self.turn in self.bots:
             # Make bot move
             move = self.engineInstance.pass_boardstate(self.chessboardInstance.board.fen())
             await self.engineInstance._pass_and_return(move)
