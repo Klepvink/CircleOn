@@ -14,7 +14,7 @@ class SquareOffInstance:
         self.turn = "white"
 
         # Experimental until settings can be provided
-        self.bots = ["black"]
+        self.bots = []
 
     def reorder_file_major_to_rank_major(self, bitboard_string):
         assert len(bitboard_string) == 64, "Bitboard must be exactly 64 characters"
