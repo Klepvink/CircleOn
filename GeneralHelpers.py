@@ -1,12 +1,5 @@
-import asyncio
-import sys
 from itertools import count, takewhile
 from typing import Iterator
-from bleak import BleakClient, BleakScanner
-
-from SquareOffInstance import SquareOffInstance
-from UartComm import ChessBoardUARTHandler
-from ChessboardInstance import ChessboardInstance
 
 # UART service UUID's for the SquareOff Pro
 UART_SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e"

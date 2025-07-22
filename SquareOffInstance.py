@@ -6,7 +6,7 @@ class SquareOffInstance:
     def __init__(self, chessboardInstance, engineInstance):
         self.engineInstance = engineInstance
         self.chessboardInstance = chessboardInstance
-        self.bitboardState = "1100001111000011110000111100001111000011110000111100001111000011"
+        self.bitboardState = "11000011" * 8
         self.picked_up_squares = set()
         self.skip_next_diff = False
         self.uart_handler = None
@@ -124,23 +124,5 @@ class SquareOffInstance:
         if self.skip_engine_on_next_move:
             print("Skipping engine move after castling rook move.")
             self.skip_engine_on_next_move = False
-            return
-
-        if self.chessboardInstance.board.is_checkmate():
-            winner = "Black" if self.chessboardInstance.board.turn == chess.WHITE else "White"
-            print(f"Checkmate! {winner} wins.")
-            if self.uart_handler:
-                if (winner == "White"):
-                    await self.uart_handler.send_command(b"27#wt*\r\n")
-                if (winner == "Black"):
-                    await self.uart_handler.send_command(b"27#bl*\r\n")
-
-        elif self.chessboardInstance.board.is_stalemate():
-            print("Stalemate. The game is a draw.")
-            await self.uart_handler.send_command(b"27#dw*\r\n")
-            
-        elif self.chessboardInstance.board.is_insufficient_material():
-            print("Draw due to insufficient material.")
-            await self.uart_handler.send_command(b"27#dw*\r\n")
-                    
+            return  
         await self.check_engine_turn()
