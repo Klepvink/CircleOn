@@ -10,8 +10,11 @@ In it's current form when ran from entrypoint.py, it will do the following:
 - Start an over the board game or Stockfish game, depending on the setup in SquareoffHandler.py.
 - At any point, you are able to enter SquareOff-commands in the terminal
 
+## Setup
+Before you get started, make sure you copy env.example.py to env.py. You don't actually have to change the contents of this file, but it contains settings for broadcasting your OTB-match to Lichess (using the Lichess Broadcaster app). This is turned off by default.
+
 ## Missing features
-Right now, playing against an AI is not fully implemented, and third party integration was not taken into consideration when writing this. A basic stockfish implementation is included by default. If you just want to play OTB, modify the self.bots list in SquareoffInstance.py. A Windows (.exe) version of Stockfish was used in this repo, however you can modify EngineHandler.py to point to a Stockfish binary for your platform.
+Right now, ~~playing against an AI is not fully implemented~~, and third party integration was not taken into consideration when writing this. A basic stockfish implementation is included by default. If you just want to play OTB, modify the env.py file. A Windows (.exe) version of Stockfish was used in this repo, however you can modify EngineInstance.py to point to a Stockfish binary for your platform.
 
 ## Important information
 BLEAK (https://github.com/hbldh/bleak )-example code is included in this code, especially a modified version of the UART_service.py example script. This was done to allow for the testing of commands sent to and from the board. If you run this script without modification, you can directly enter commands to send to the board in your terminal to test functionality.

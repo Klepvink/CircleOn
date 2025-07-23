@@ -9,6 +9,7 @@ import chess
 import chess.pgn
 
 import GeneralHelpers
+import env
 
 class ChessBoardUARTHandler:
     def __init__(self, client, rx_char, squareOffInstance, chessboardInstance, engineInstance):
@@ -19,6 +20,7 @@ class ChessBoardUARTHandler:
 
         self.squareOffInstance = squareOffInstance
         self.engineInstance = engineInstance
+        chess.pgn.StringExporter(headers=True, variations=True, comments=True)
 
         self.squareOffInstance.uart_handler = self
 
@@ -27,10 +29,17 @@ class ChessBoardUARTHandler:
             self.squareOffInstance.engineInstance = self.engineInstance
             self.engineInstance.uart_handler = self
 
-
     # Function is called on succesful connection to the SquareOff board.
     async def CommSuccess(self):
         print("Starting game…")
+
+        if env.ENABLE_LICHESS_BROADCAST:
+            from LichessBroadcaster import LichessBroadcaster
+            self.lichessBroadcast = LichessBroadcaster()
+            self.lichessBroadcast.create_broadcast("SquareOff broadcast", "SquareOff broadcast of an OTB-game")
+            self.lichessBroadcast.create_round("Game 1")
+            pgn_text = self.chessboardInstance.game.accept(chess.pgn.StringExporter(headers=True, variations=True, comments=True))
+            self.lichessBroadcast.update_round(pgn_text)
 
     async def handle_rx(self, characteristic, data: bytearray):
         decoded = data.decode("utf-8")
@@ -83,9 +92,10 @@ class ChessBoardUARTHandler:
             # a winner being indicated prematurely.
             if (new_boardstate == self.chessboardInstance.board_to_occupation_string()):
                 
-                # Debug purposes, print state of the ChessboardInstance
-                exporter = chess.pgn.StringExporter(headers=True, variations=True, comments=True)
-                pgn_text = self.chessboardInstance.game.accept(exporter)
+                pgn_text = self.chessboardInstance.game.accept(chess.pgn.StringExporter(headers=True, variations=True, comments=True))
+
+                if env.ENABLE_LICHESS_BROADCAST:
+                    self.lichessBroadcast.update_round(pgn_text)
                 print(pgn_text)
 
                 if self.chessboardInstance.board.is_checkmate():

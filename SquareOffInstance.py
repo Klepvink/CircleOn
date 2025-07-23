@@ -6,6 +6,7 @@ preventing false positives.
 import chess
 
 import GeneralHelpers 
+import env
 
 class SquareOffInstance:
     def __init__(self, chessboardInstance):
@@ -24,8 +25,7 @@ class SquareOffInstance:
         self.turn = "white"
 
         # Modify to suit your needs. Engine vs engine is possible, either color to be an engine, or clear the list to play OTB.
-        # self.bots = ["white", "black"]
-        self.bots = ["black"]
+        self.bots = env.ENGINE_PLAYERS
 
     def reorder_file_major_to_rank_major(self, bitboard_string):
         assert len(bitboard_string) == 64, "Bitboard must be exactly 64 characters"

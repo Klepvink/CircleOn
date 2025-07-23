@@ -37,6 +37,8 @@ async def uart_terminal():
         handler = ChessBoardUARTHandler(client, rx_char, squareOffInstance=squareOffInstance, chessboardInstance=chessboardInstance, engineInstance=engineInstance)
 
         await client.start_notify(UART_TX_CHAR_UUID, handler.handle_rx)
+        
+        await handler.CommSuccess()
         await handler.send_game_start_sequence()
 
         # First move, check to see who's turn it is
