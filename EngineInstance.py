@@ -8,6 +8,7 @@ from stockfish import Stockfish
 import GeneralHelpers
 import chess
 
+import env
 
 class EngineInstance:
     def __init__(self, chessboardInstance):
@@ -15,12 +16,13 @@ class EngineInstance:
         self.chessboardInstance = chessboardInstance
 
         # This is now Windows-specific, however I highly encourage you to download your own copy of stockfish (for your own platform) and use that
-        self.stockfishPath = os.path.realpath("stockfish.exe")   
+        self.stockfishPath = os.path.realpath(env.STOCKFISH_LOCATION)   
 
         # Stockfish init, can be set to any value deemed fit
         self.stockfish = Stockfish(path=self.stockfishPath, depth=16, parameters={
             "Threads": 4, "Minimum Thinking Time": 16})
-        self.stockfish.set_elo_rating(1500)
+        
+        self.stockfish.set_elo_rating(env.ENGINE_ELO)
         
         self.originalBitboard = "11000011" * 8
     

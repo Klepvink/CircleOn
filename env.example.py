@@ -1,5 +1,7 @@
 # Game settings
 ENGINE_PLAYERS=["black"] # Define what player is an engine. Leave empty for OTB.
+STOCKFISH_LOCATION="stockfish.exe"
+ENGINE_ELO=1200
 
 # Specific to Lichess broadcasting.
 ENABLE_LICHESS_BROADCAST=False
