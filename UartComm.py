@@ -20,7 +20,6 @@ class ChessBoardUARTHandler:
 
         self.squareOffInstance = squareOffInstance
         self.engineInstance = engineInstance
-        chess.pgn.StringExporter(headers=True, variations=True, comments=True)
 
         self.squareOffInstance.uart_handler = self
 

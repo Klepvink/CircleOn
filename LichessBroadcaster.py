@@ -1,5 +1,5 @@
 """
-For now, this class simply writes the PGN to a file (game.pgn) after
+For now, this class simply writes the PGN to a file (games.pgn) after
 each move. This file can be used in combination with the Lichess
 broadcaster application.
 """
