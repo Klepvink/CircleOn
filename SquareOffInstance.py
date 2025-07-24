@@ -4,6 +4,7 @@ preventing false positives.
 """
 
 import chess
+from time import sleep
 
 import GeneralHelpers 
 import env
@@ -24,8 +25,21 @@ class SquareOffInstance:
         self.skip_engine_on_next_move = False
         self.turn = "white"
 
-        # Modify to suit your needs. Engine vs engine is possible, either color to be an engine, or clear the list to play OTB.
         self.bots = env.ENGINE_PLAYERS
+
+    async def lightNonmatchingSquares(self, new_boardstate):
+        if not self.skip_engine_on_next_move:
+            # Red status LED. It technically works, but it causes too many problems to permanently introduce at this point
+            #await self.uart_handler.send_command(b"26#ISR*")
+            #sleep(0.3)
+            print("Status - RED")
+    
+        diff_squares = GeneralHelpers.bitboard_index_to_squares([i for i in range(len(new_boardstate)) if new_boardstate[i] != self.chessboardInstance.board_to_occupation_string()[i]])
+        print(diff_squares)
+
+        # Light up mismatching LED's on the SquareOff board
+        await self.uart_handler.send_command(f"25#{"".join(diff_squares)}*".encode())
+        diff_squares = []
 
     def reorder_file_major_to_rank_major(self, bitboard_string):
         assert len(bitboard_string) == 64, "Bitboard must be exactly 64 characters"
@@ -44,12 +58,7 @@ class SquareOffInstance:
             print("Skipping move detection due to castling sync.")
 
             if new_board_bits != self.chessboardInstance.board_to_occupation_string():
-                    diff_squares = GeneralHelpers.bitboard_index_to_squares([i for i in range(len(new_board_bits)) if new_board_bits[i] != self.chessboardInstance.board_to_occupation_string()[i]])
-                    print(diff_squares)
-
-                    # Light up mismatching LED's on the SquareOff board
-                    await self.uart_handler.send_command(f"25#{"".join(diff_squares)}*".encode())
-                    diff_squares = []
+                await self.lightNonmatchingSquares(new_board_bits)
             
             await self.check_engine_turn()
 

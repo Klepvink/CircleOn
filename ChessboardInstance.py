@@ -1,12 +1,18 @@
 import chess
 import chess.pgn
 
+import env
+
 class ChessboardInstance:
     def __init__(self, initial_fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
         self.board = chess.Board(fen=initial_fen)
         self.game = chess.pgn.Game.from_board(self.board)
+
+        self.game.headers['Event'] = env.PGN_EVENT_NAME
+        self.game.headers['White'] = env.PGN_WHITE_PLAYER
+        self.game.headers['Black'] = env.PGN_BLACK_PLAYER
+
         self.current_node = self.game
-        self.pgn_export = True
 
     def is_promotion_move(self, move):
         piece = self.board.piece_at(move.from_square)

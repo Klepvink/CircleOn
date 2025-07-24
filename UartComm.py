@@ -30,7 +30,6 @@ class ChessBoardUARTHandler:
 
     # Function is called on succesful connection to the SquareOff board.
     async def CommSuccess(self):
-        print("Starting game…")
 
         if env.ENABLE_LICHESS_BROADCAST:
             from LichessBroadcaster import LichessBroadcaster
@@ -80,17 +79,13 @@ class ChessBoardUARTHandler:
 
             # Check if the physical location of pieces matches with the expected occupied spaces on the ChessboardInstance.
             if (new_boardstate != self.chessboardInstance.board_to_occupation_string()):
-                diff_squares = GeneralHelpers.bitboard_index_to_squares([i for i in range(len(new_boardstate)) if new_boardstate[i] != self.chessboardInstance.board_to_occupation_string()[i]])
-                print(diff_squares)
-
-                # Light up mismatching LED's on the SquareOff board
-                await self.send_command(f"25#{"".join(diff_squares)}*".encode())
-                diff_squares = []
+                await self.squareOffInstance.lightNonmatchingSquares(new_boardstate)
             
             # If boardstates are matching (physical and ChessboardInstance, check if game is over). This is done here, to prevent
             # a winner being indicated prematurely.
             if (new_boardstate == self.chessboardInstance.board_to_occupation_string()):
-                
+                #await self.send_command(b"26#ISG*")
+                time.sleep(0.3)
                 pgn_text = self.chessboardInstance.game.accept(chess.pgn.StringExporter(headers=True, variations=True, comments=True))
 
                 if env.ENABLE_LICHESS_BROADCAST:
@@ -106,6 +101,9 @@ class ChessBoardUARTHandler:
                     if (winner == "Black"):
                         await self.send_command(b"27#bl*\r\n")
                         exit()
+                    # Red status LED. It technically works, but it causes too many problems to permanently introduce at this point
+                    #await self.uart_handler.send_command(b"26#ISR*")
+                    #time.sleep(0.3)
 
                 elif self.chessboardInstance.board.is_stalemate() or self.chessboardInstance.board.is_insufficient_material():
                     print("The game is a draw.")
@@ -124,3 +122,6 @@ class ChessBoardUARTHandler:
         for cmd in sequence:
             await self.send_command(cmd)
             time.sleep(0.5)
+
+        print("Checking board setup...")
+        await self.send_command(b"30#R*\r\n")

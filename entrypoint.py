@@ -8,7 +8,7 @@ from UartComm import ChessBoardUARTHandler
 from ChessboardInstance import ChessboardInstance
 from EngineInstance import EngineInstance
 
-starting_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+import env
 
 async def uart_terminal():
     device = await BleakScanner.find_device_by_name("Squareoff Pro", cb={"use_bdaddr": True})
@@ -29,7 +29,7 @@ async def uart_terminal():
         nus = client.services.get_service(UART_SERVICE_UUID)
         rx_char = nus.get_characteristic(UART_RX_CHAR_UUID)
 
-        chessboardInstance = ChessboardInstance(initial_fen=starting_fen)
+        chessboardInstance = ChessboardInstance(initial_fen=env.STARTING_FEN)
 
         squareOffInstance = SquareOffInstance(chessboardInstance=chessboardInstance)
         engineInstance = EngineInstance(chessboardInstance=chessboardInstance)
