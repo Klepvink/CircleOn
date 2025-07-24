@@ -109,7 +109,8 @@ class SquareOffInstance:
             print(f"Bot turn for {self.turn}, not taken into consideration as player move")
             return
         
-        raise ValueError("No legal move found matching diff.")
+        print("No legal move found matching diff.")
+        return None
 
     def _push_and_return(self, move):
         if self.chessboardInstance.is_promotion_move(move):
