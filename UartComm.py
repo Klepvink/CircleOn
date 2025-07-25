@@ -4,7 +4,6 @@ the SquareOff Pro board (pieces being moved, or the state
 of the board being communicated). 
 """
 
-import time
 import chess
 import chess.pgn
 
@@ -85,7 +84,7 @@ class ChessBoardUARTHandler:
             # a winner being indicated prematurely.
             if (new_boardstate == self.chessboardInstance.board_to_occupation_string()):
                 #await self.send_command(b"26#ISG*")
-                time.sleep(0.3)
+                #time.sleep(0.3)
                 pgn_text = self.chessboardInstance.game.accept(chess.pgn.StringExporter(headers=True, variations=True, comments=True))
 
                 if env.ENABLE_LICHESS_BROADCAST:
@@ -121,7 +120,7 @@ class ChessBoardUARTHandler:
         sequence = [b"!#*\r\n", b"25#*\r\n", b"26#ISG*\r\n"]
         for cmd in sequence:
             await self.send_command(cmd)
-            time.sleep(0.5)
+            #time.sleep(0.5)
 
         print("Checking board setup...")
         await self.send_command(b"30#R*\r\n")
