@@ -21,25 +21,31 @@ class LichessInstance:
         # Lichess specific settings
         self.baseUrl = "https://lichess.org"
         self.gameId = None
-        self.opponentColor = "white"
+        self.opponentColor = None
         self.lichessToken = env.LICHESS_TOKEN
 
         self.headers = {
             "Authorization": f"Bearer {self.lichessToken}" 
         }
 
-        ongoingGames = requests.get(f'{self.baseUrl}/api/account/playing', headers=self.headers)
+        ongoingGames = requests.get(f'{self.baseUrl}/api/account/playing', headers=self.headers).json()
 
-        print(ongoingGames.json())
+        mostRecent = ongoingGames['nowPlaying'][0]
+
+        self.gameId = mostRecent['gameId']
+
+        if mostRecent['color'] == 'white':
+            self.opponentColor = 'black'
+        else:
+            self.opponentColor = 'white'
+            self.squareoffInstance.bots = [self.opponentColor]
+
     
     # Is called whenever engine needs to be aware of the new boardstate
     # Boardstate is a valid FEN-string
 
     def pass_boardstate(self, input_fen):
-        self.input_fen = input_fen
-        self.stockfish.set_fen_position(input_fen)
-        if self.input_fen:
-            return self.stockfish.get_best_move()
+        return
     
     # Function is called to send the move to the chessboardInstance. Should preferably be called from UartComm, as it allows
     # for additional control over what move is ultimately sent to the chessboardInstance. 

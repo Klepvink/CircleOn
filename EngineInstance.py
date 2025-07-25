@@ -20,8 +20,8 @@ class EngineInstance:
         self.stockfishPath = os.path.realpath(env.STOCKFISH_LOCATION)   
 
         # Stockfish init, can be set to any value deemed fit
-        self.stockfish = Stockfish(path=self.stockfishPath, depth=16, parameters={
-            "Threads": 4, "Minimum Thinking Time": 16})
+        self.stockfish = Stockfish(path=self.stockfishPath, depth=20, parameters={
+            "Threads": 4, "Minimum Thinking Time": 20})
         
         self.stockfish.set_elo_rating(env.ENGINE_ELO)
         

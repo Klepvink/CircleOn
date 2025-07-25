@@ -40,6 +40,7 @@ async def uart_terminal():
 
         if env.PLAY_LICHESS_GAME:
             engineInstance = LichessInstance(chessboardInstance=chessboardInstance)
+            engineInstance.squareoffInstance = squareOffInstance
         else:
             engineInstance = EngineInstance(chessboardInstance=chessboardInstance)
         
