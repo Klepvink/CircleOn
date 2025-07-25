@@ -1,9 +1,9 @@
 """
-Class that contains all functions needed to play against the engine.
-This class is able to talk to UartComm directly for LED-control.
+Class that contains all functions needed to play against Lichess.
+This is somewhat of a drop-in replacement for the EngineInstance,
+but requires access to the SquareOffInstance in order to use the
+settings passed from Lichess instead of env.py.
 """
-
-import os
 import GeneralHelpers
 import chess
 import requests
@@ -30,16 +30,31 @@ class LichessInstance:
 
         ongoingGames = requests.get(f'{self.baseUrl}/api/account/playing', headers=self.headers).json()
 
+        # Not ideal, but selecting the most recent game works for now.
+        # TODO: Add game selector
         mostRecent = ongoingGames['nowPlaying'][0]
-
+        self.gameState = mostRecent['fen']
         self.gameId = mostRecent['gameId']
 
+        # Overwrite engine color based on ongoing game.
         if mostRecent['color'] == 'white':
             self.opponentColor = 'black'
         else:
             self.opponentColor = 'white'
-            self.squareoffInstance.bots = [self.opponentColor]
+        self.squareoffInstance.bots = [self.opponentColor]
 
+        # Allow Lichess to overwrite the current chessboardInstance. Not as clean as i'd want it to be as
+        # I would rather instantiate the chessboardInstance using the FEN instead of overwriting, but it
+        # should work reliably.
+        self.chessboardInstance.board = chess.Board(fen=self.gameState)
+        self.chessboardInstance.game = chess.pgn.Game.from_board(self.chessboardInstance.board)
+
+        # TODO: Overwrite written PGN to match game information from Lichess.
+        self.chessboardInstance.game.headers['Event'] = env.PGN_EVENT_NAME
+        self.chessboardInstance.game.headers['White'] = env.PGN_WHITE_PLAYER
+        self.chessboardInstance.game.headers['Black'] = env.PGN_BLACK_PLAYER
+
+        self.chessboardInstance.current_node = self.chessboardInstance.game
     
     # Is called whenever engine needs to be aware of the new boardstate
     # Boardstate is a valid FEN-string
