@@ -25,6 +25,8 @@ class SquareOffInstance:
         self.skip_engine_on_next_move = False
         self.turn = "white"
 
+        if env.PLAY_LICHESS_GAME:    
+            self.bots = []
         self.bots = env.ENGINE_PLAYERS
 
     async def lightNonmatchingSquares(self, new_boardstate):

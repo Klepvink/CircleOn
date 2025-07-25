@@ -4,6 +4,7 @@ the SquareOff Pro board (pieces being moved, or the state
 of the board being communicated). 
 """
 
+import time
 import chess
 import chess.pgn
 
@@ -120,7 +121,7 @@ class ChessBoardUARTHandler:
         sequence = [b"!#*\r\n", b"25#*\r\n", b"26#ISG*\r\n"]
         for cmd in sequence:
             await self.send_command(cmd)
-            #time.sleep(0.5)
+            time.sleep(0.5)
 
         print("Checking board setup...")
         await self.send_command(b"30#R*\r\n")

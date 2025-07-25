@@ -2,9 +2,13 @@
 # when playing against the engine, or to disable engine play altogether.
 STARTING_FEN="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
-ENGINE_PLAYERS=["black"]
+ENGINE_PLAYERS=["white"]
 STOCKFISH_LOCATION="stockfish.exe"
 ENGINE_ELO=1200
+
+# Experimental, Lichess play
+PLAY_LICHESS_GAME = False
+LICHESS_TOKEN = ""
 
 # Specific to Lichess broadcasting. This function is handy for when you want to
 # stream your OTB-games to your friends, or if you want to perform live analysis

@@ -6,9 +6,14 @@ from GeneralHelpers import UART_SERVICE_UUID, UART_TX_CHAR_UUID, UART_RX_CHAR_UU
 from SquareOffInstance import SquareOffInstance
 from UartComm import ChessBoardUARTHandler
 from ChessboardInstance import ChessboardInstance
-from EngineInstance import EngineInstance
 
 import env
+
+if env.PLAY_LICHESS_GAME:
+    from LichessInstance import LichessInstance
+else:
+    from EngineInstance import EngineInstance
+
 
 async def uart_terminal():
     device = await BleakScanner.find_device_by_name("Squareoff Pro", cb={"use_bdaddr": True})
@@ -32,7 +37,11 @@ async def uart_terminal():
         chessboardInstance = ChessboardInstance(initial_fen=env.STARTING_FEN)
 
         squareOffInstance = SquareOffInstance(chessboardInstance=chessboardInstance)
-        engineInstance = EngineInstance(chessboardInstance=chessboardInstance)
+
+        if env.PLAY_LICHESS_GAME:
+            engineInstance = LichessInstance(chessboardInstance=chessboardInstance)
+        else:
+            engineInstance = EngineInstance(chessboardInstance=chessboardInstance)
         
         handler = ChessBoardUARTHandler(client, rx_char, squareOffInstance=squareOffInstance, chessboardInstance=chessboardInstance, engineInstance=engineInstance)
 

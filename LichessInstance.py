@@ -4,28 +4,33 @@ This class is able to talk to UartComm directly for LED-control.
 """
 
 import os
-from stockfish import Stockfish
 import GeneralHelpers
 import chess
+import requests
 
 import env
 
-class EngineInstance:
+class LichessInstance:
     def __init__(self, chessboardInstance):
         self.uart_handler = None
         self.chessboardInstance = chessboardInstance
         self.squareoffInstance = None
-
-        # This is now Windows-specific, however I highly encourage you to download your own copy of stockfish (for your own platform) and use that
-        self.stockfishPath = os.path.realpath(env.STOCKFISH_LOCATION)   
-
-        # Stockfish init, can be set to any value deemed fit
-        self.stockfish = Stockfish(path=self.stockfishPath, depth=16, parameters={
-            "Threads": 4, "Minimum Thinking Time": 16})
-        
-        self.stockfish.set_elo_rating(env.ENGINE_ELO)
         
         self.originalBitboard = "11000011" * 8
+
+        # Lichess specific settings
+        self.baseUrl = "https://lichess.org"
+        self.gameId = None
+        self.opponentColor = "white"
+        self.lichessToken = env.LICHESS_TOKEN
+
+        self.headers = {
+            "Authorization": f"Bearer {self.lichessToken}" 
+        }
+
+        ongoingGames = requests.get(f'{self.baseUrl}/api/account/playing', headers=self.headers)
+
+        print(ongoingGames.json())
     
     # Is called whenever engine needs to be aware of the new boardstate
     # Boardstate is a valid FEN-string
