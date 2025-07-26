@@ -136,7 +136,7 @@ class SquareOffInstance:
 
         return move.uci()
     
-    async def check_engine_turn(self):
+    async def check_engine_turn(self, move=None):
         if self.chessboardInstance.board.turn == chess.WHITE:
             self.turn = "white"
             print("White's turn")
@@ -146,14 +146,13 @@ class SquareOffInstance:
 
         if len(self.bots) > 0 and self.turn in self.bots:
             # Make bot move
-            move = self.engineInstance.pass_boardstate(self.chessboardInstance.board.fen())
-            await self.engineInstance._pass_and_return(move)
+            engineMove = self.engineInstance.pass_boardstate(input_fen=self.chessboardInstance.board.fen(), input_move=move)
+            await self.engineInstance._pass_and_return(engineMove)
             
     # Function called everytime a move is made
-    async def on_move_made(self):
+    async def on_move_made(self, move: None):
         if self.skip_engine_on_next_move:
             print("Skipping engine move after castling rook move.")
             self.skip_engine_on_next_move = False
-            return  
 
-        await self.check_engine_turn()
+        await self.check_engine_turn(move=move)

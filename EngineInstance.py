@@ -29,10 +29,10 @@ class EngineInstance:
     # Is called whenever engine needs to be aware of the new boardstate
     # Boardstate is a valid FEN-string
 
-    def pass_boardstate(self, input_fen):
+    def pass_boardstate(self, input_fen=None, input_move=None):
         self.input_fen = input_fen
-        self.stockfish.set_fen_position(input_fen)
         if self.input_fen:
+            self.stockfish.set_fen_position(self.input_fen)
             return self.stockfish.get_best_move()
     
     # Function is called to send the move to the chessboardInstance. Should preferably be called from UartComm, as it allows

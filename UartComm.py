@@ -97,10 +97,8 @@ class ChessBoardUARTHandler:
                     print(f"Checkmate! {winner} wins.")
                     if (winner == "White"):
                         await self.send_command(b"27#wt*\r\n")
-                        exit()
                     if (winner == "Black"):
                         await self.send_command(b"27#bl*\r\n")
-                        exit()
                     # Red status LED. It technically works, but it causes too many problems to permanently introduce at this point
                     #await self.uart_handler.send_command(b"26#ISR*")
                     #time.sleep(0.3)
@@ -108,9 +106,8 @@ class ChessBoardUARTHandler:
                 elif self.chessboardInstance.board.is_stalemate() or self.chessboardInstance.board.is_insufficient_material():
                     print("The game is a draw.")
                     await self.send_command(b"27#dw*\r\n")
-                    exit()
                 
-                await self.squareOffInstance.on_move_made()
+                await self.squareOffInstance.on_move_made(madeMove)
 
     async def send_command(self, data: bytes):
         for s in GeneralHelpers.sliced(data, self.rx_char.max_write_without_response_size):

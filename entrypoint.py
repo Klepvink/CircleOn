@@ -39,12 +39,14 @@ async def uart_terminal():
         squareOffInstance = SquareOffInstance(chessboardInstance=chessboardInstance)
 
         if env.PLAY_LICHESS_GAME:
-            engineInstance = LichessInstance(chessboardInstance=chessboardInstance)
-            engineInstance.squareoffInstance = squareOffInstance
+            engineInstance = LichessInstance(chessboardInstance=chessboardInstance, squareoffInstance=squareOffInstance)
         else:
             engineInstance = EngineInstance(chessboardInstance=chessboardInstance)
         
-        handler = ChessBoardUARTHandler(client, rx_char, squareOffInstance=squareOffInstance, chessboardInstance=chessboardInstance, engineInstance=engineInstance)
+        handler = ChessBoardUARTHandler(client, rx_char, 
+                                        squareOffInstance=squareOffInstance, 
+                                        chessboardInstance=chessboardInstance, 
+                                        engineInstance=engineInstance)
 
         await client.start_notify(UART_TX_CHAR_UUID, handler.handle_rx)
         
