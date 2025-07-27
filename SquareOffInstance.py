@@ -22,7 +22,7 @@ class SquareOffInstance:
         self.picked_up_squares = set()
 
         self.skip_next_diff = False
-        self.skip_engine_on_next_move = False
+        self.set_castling_move = False
         self.turn = "white"
 
         if env.PLAY_LICHESS_GAME:    
@@ -30,7 +30,7 @@ class SquareOffInstance:
         self.bots = env.ENGINE_PLAYERS
 
     async def lightNonmatchingSquares(self, new_boardstate):
-        if not self.skip_engine_on_next_move:
+        if not self.set_castling_move:
             # Red status LED. It technically works, but it causes too many problems to permanently introduce at this point
             #await self.uart_handler.send_command(b"26#ISR*")
             #sleep(0.3)
@@ -63,9 +63,9 @@ class SquareOffInstance:
                 await self.lightNonmatchingSquares(new_board_bits)
             
             self.skip_next_diff = False
-            await self.check_engine_turn(move=self.skip_engine_on_next_move)
+            await self.check_engine_turn(move=self.set_castling_move)
 
-            return self.skip_engine_on_next_move
+            return None
 
         def bitboard_to_set(bits):
             return {i for i, b in enumerate(bits) if b == '1'}
@@ -97,9 +97,8 @@ class SquareOffInstance:
 
                         if self.chessboardInstance.is_castling_move(move):
                             print("Castling detected, waiting for rook move.")
-                            self.skip_engine_on_next_move = move
+                            self.set_castling_move = move
                             self.skip_next_diff = True
-                            print(f"Castling move: {move}")
                         return move
                     
                     elif len(moved_to) == 0 and move.to_square in old_occupied:
@@ -152,8 +151,8 @@ class SquareOffInstance:
             
     # Function called everytime a move is made
     async def on_move_made(self, move: None):
-        if self.skip_engine_on_next_move:
+        if self.set_castling_move:
             print("Skipping engine move after castling rook move.")
-            self.skip_engine_on_next_move = False
+            self.set_castling_move = False
 
         await self.check_engine_turn(move=move)
