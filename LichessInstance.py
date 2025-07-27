@@ -6,7 +6,9 @@ settings passed from Lichess instead of env.py.
 """
 import GeneralHelpers
 import chess
+import chess.pgn
 import httpx
+import io
 from threading import Thread
 import asyncio
 
@@ -55,21 +57,23 @@ class LichessInstance:
             self.opponentColor = 'white'
         self.squareoffInstance.bots = [self.opponentColor]
 
+        # Get PGN of selected game
+        pgnResponse = httpx.get(f"{self.baseUrl}/game/export/{self.gameId}?evals=false", headers=self.headers)
+        print(pgnResponse.text)
+        pgn_io = io.StringIO(pgnResponse.text)
+        LichessGame = chess.pgn.read_game(pgn_io)
+
         # Allow Lichess to overwrite the current chessboardInstance. Not as clean as i'd want it to be as
         # I would rather instantiate the chessboardInstance using the FEN instead of overwriting, but it
         # should work reliably.
-        self.chessboardInstance.board = chess.Board(fen=self.gameState)
+
+        self.chessboardInstance.board = LichessGame.end().board()
         self.chessboardInstance.game = chess.pgn.Game.from_board(self.chessboardInstance.board)
 
         if self.chessboardInstance.board.turn == chess.WHITE:
             self.squareoffInstance.turn = "white"
         elif self.chessboardInstance.board.turn == chess.BLACK:
             self.squareoffInstance.turn = "black"
-        
-        # TODO: Overwrite written PGN to match game information from Lichess.
-        self.chessboardInstance.game.headers['Event'] = env.PGN_EVENT_NAME
-        self.chessboardInstance.game.headers['White'] = env.PGN_WHITE_PLAYER
-        self.chessboardInstance.game.headers['Black'] = env.PGN_BLACK_PLAYER
 
         self.chessboardInstance.current_node = self.chessboardInstance.game
 
@@ -121,31 +125,28 @@ class LichessInstance:
     # Boardstate is a valid FEN-string
 
     def pass_boardstate(self, input_fen=None, input_move=None):
+        print(f"Lichess input fen: {input_fen}")
+        print(f"Lichess input move: {input_move}")
+     
         if input_fen:
             self.chessboardInstance.board.set_fen(input_fen)
 
-        if input_move:
-            print(f"{input_move.uci()} was passed to Lichess")
-            response = httpx.post(
-                f'{self.baseUrl}/api/board/game/{self.gameId}/move/{input_move.uci()}',
-                headers=self.headers
-            )
-            moveResponse = response.json()
-            print(moveResponse)
+        if not input_move:
+            input_move = self.chessboardInstance.board.peek()
 
-            # Just wait for new move
-            future = asyncio.run_coroutine_threadsafe(self.wait_for_opponent_move(), self.loop)
-            opponent_uci = future.result()
+        print(f"{input_move.uci()} was passed to Lichess")
+        response = httpx.post(
+            f'{self.baseUrl}/api/board/game/{self.gameId}/move/{input_move.uci()}',
+            headers=self.headers
+        )
 
-            print(f"Opponent played: {opponent_uci}")
+        moveResponse = response.json()
+        print(moveResponse)
 
-            # Optional: validate legality only AFTER update
-            move = chess.Move.from_uci(opponent_uci)
-            if move not in self.chessboardInstance.board.legal_moves:
-                print(f"⚠️ Illegal move {opponent_uci} in FEN: {self.chessboardInstance.board.fen()}")
-                raise ValueError("Illegal opponent move")
+        future = asyncio.run_coroutine_threadsafe(self.wait_for_opponent_move(), self.loop)
+        opponent_uci = future.result()
+        return opponent_uci
 
-            return opponent_uci
 
 
     

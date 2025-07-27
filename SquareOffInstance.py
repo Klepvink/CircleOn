@@ -62,9 +62,9 @@ class SquareOffInstance:
             if new_board_bits != self.chessboardInstance.board_to_occupation_string():
                 await self.lightNonmatchingSquares(new_board_bits)
             
-            await self.check_engine_turn()
-
             self.skip_next_diff = False
+            await self.check_engine_turn(move=self.skip_engine_on_next_move)
+
             return None
 
         def bitboard_to_set(bits):
@@ -97,8 +97,9 @@ class SquareOffInstance:
 
                         if self.chessboardInstance.is_castling_move(move):
                             print("Castling detected, waiting for rook move.")
-                            self.skip_engine_on_next_move = True
+                            self.skip_engine_on_next_move = move
                             self.skip_next_diff = True
+                            print(f"Castling move: {move}")
                         return move
                     
                     elif len(moved_to) == 0 and move.to_square in old_occupied:
