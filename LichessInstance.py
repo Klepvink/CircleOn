@@ -59,7 +59,6 @@ class LichessInstance:
 
         # Get PGN of selected game
         pgnResponse = httpx.get(f"{self.baseUrl}/game/export/{self.gameId}?evals=false", headers=self.headers)
-        print(pgnResponse.text)
         pgn_io = io.StringIO(pgnResponse.text)
         LichessGame = chess.pgn.read_game(pgn_io)
 
@@ -67,7 +66,7 @@ class LichessInstance:
         # I would rather instantiate the chessboardInstance using the FEN instead of overwriting, but it
         # should work reliably.
 
-        self.chessboardInstance.board = LichessGame.end().board()
+        self.chessboardInstance.board = chess.Board(fen=self.gameState)
         self.chessboardInstance.game = chess.pgn.Game.from_board(self.chessboardInstance.board)
 
         if self.chessboardInstance.board.turn == chess.WHITE:

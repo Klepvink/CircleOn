@@ -65,7 +65,7 @@ class SquareOffInstance:
             self.skip_next_diff = False
             await self.check_engine_turn(move=self.skip_engine_on_next_move)
 
-            return None
+            return self.skip_engine_on_next_move
 
         def bitboard_to_set(bits):
             return {i for i, b in enumerate(bits) if b == '1'}
