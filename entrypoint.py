@@ -10,9 +10,9 @@ from ChessboardInstance import ChessboardInstance
 import env
 
 if env.PLAY_LICHESS_GAME:
-    from LichessInstance import LichessInstance
+    from Opponents.LichessInstance import LichessInstance
 else:
-    from EngineInstance import EngineInstance
+    from Opponents.EngineInstance import EngineInstance
 
 
 async def uart_terminal():

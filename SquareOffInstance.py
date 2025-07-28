@@ -6,7 +6,7 @@ preventing false positives.
 import chess
 from time import sleep
 
-import GeneralHelpers 
+import GeneralHelpers as GeneralHelpers 
 import env
 
 class SquareOffInstance:

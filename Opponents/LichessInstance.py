@@ -4,7 +4,7 @@ This is somewhat of a drop-in replacement for the EngineInstance,
 but requires access to the SquareOffInstance in order to use the
 settings passed from Lichess instead of env.py.
 """
-import GeneralHelpers
+import GeneralHelpers as GeneralHelpers
 import chess
 import chess.pgn
 import httpx
@@ -44,7 +44,6 @@ class LichessInstance:
         self.loop = asyncio.new_event_loop()
         self.move_ready_event = asyncio.Event()
         self.opponentMove = None
-        self.moveReady = False
 
         # Start event loop in background
         Thread(target=self.loop.run_forever, daemon=True).start()
@@ -121,7 +120,7 @@ class LichessInstance:
                         
     
     # Is called whenever engine needs to be aware of the new boardstate
-    # Boardstate is a valid FEN-string
+    # Boardstate is a valid FEN-string (or UCI move)
 
     def pass_boardstate(self, input_fen=None, input_move=None):
         print(f"Lichess input fen: {input_fen}")

@@ -5,7 +5,7 @@ This class is able to talk to UartComm directly for LED-control.
 
 import os
 from stockfish import Stockfish
-import GeneralHelpers
+import GeneralHelpers as GeneralHelpers
 import chess
 
 import env
