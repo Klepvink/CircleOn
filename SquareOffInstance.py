@@ -63,7 +63,9 @@ class SquareOffInstance:
                 await self.lightNonmatchingSquares(new_board_bits)
             
             self.skip_next_diff = False
-            await self.check_engine_turn(move=self.set_castling_move)
+
+            # Check turn, pass queued castling move
+            await self.check_turn(move=self.set_castling_move)
 
             return None
 
@@ -136,7 +138,7 @@ class SquareOffInstance:
 
         return move.uci()
     
-    async def check_engine_turn(self, move=None):
+    async def check_turn(self, move=None):
         if self.chessboardInstance.board.turn == chess.WHITE:
             self.turn = "white"
             print("White's turn")
@@ -155,4 +157,4 @@ class SquareOffInstance:
             print("Skipping engine move after castling rook move.")
             self.set_castling_move = False
 
-        await self.check_engine_turn(move=move)
+        await self.check_turn(move=move)

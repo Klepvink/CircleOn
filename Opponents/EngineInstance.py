@@ -11,10 +11,11 @@ import chess
 import env
 
 class EngineInstance:
-    def __init__(self, chessboardInstance):
+    def __init__(self, chessboardInstance, squareoffInstance):
         self.uart_handler = None
         self.chessboardInstance = chessboardInstance
-
+        self.squareoffInstance = squareoffInstance
+        
         # This is now Windows-specific, however I highly encourage you to download your own copy of stockfish (for your own platform) and use that
         self.stockfishPath = os.path.realpath(env.STOCKFISH_LOCATION)   
 
