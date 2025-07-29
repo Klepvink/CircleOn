@@ -65,7 +65,8 @@ class ChessBoardUARTHandler:
             print(new_boardstate)
             # Communicate the new state of the board as presented by SquareOff to the engine, to allow the engine to light up
             # specific squares on the board.
-            self.engineInstance.originalBitboard = new_boardstate
+            if self.engineInstance:
+                self.engineInstance.originalBitboard = new_boardstate
 
             # Calls the function responsible for converting the SquareOff occupation string to a valid move
             madeMove = await self.squareOffInstance.find_uci_move(new_board_bits=new_boardstate)                
