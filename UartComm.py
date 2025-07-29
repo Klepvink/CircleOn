@@ -36,6 +36,7 @@ class ChessBoardUARTHandler:
             self.lichessBroadcast = LichessBroadcaster()
             self.lichessBroadcast.create_broadcast("SquareOff broadcast", "SquareOff broadcast of an OTB-game")
             self.lichessBroadcast.create_round("Game 1")
+
             pgn_text = self.chessboardInstance.game.accept(chess.pgn.StringExporter(headers=True, variations=True, comments=True))
             self.lichessBroadcast.update_round(pgn_text)
 
@@ -91,7 +92,6 @@ class ChessBoardUARTHandler:
 
                 if env.ENABLE_LICHESS_BROADCAST:
                     self.lichessBroadcast.update_round(pgn_text)
-                print(pgn_text)
 
                 if self.chessboardInstance.board.is_checkmate():
                     winner = "Black" if self.chessboardInstance.board.turn == chess.WHITE else "White"
@@ -100,9 +100,6 @@ class ChessBoardUARTHandler:
                         await self.send_command(b"27#wt*\r\n")
                     if (winner == "Black"):
                         await self.send_command(b"27#bl*\r\n")
-                    # Red status LED. It technically works, but it causes too many problems to permanently introduce at this point
-                    #await self.uart_handler.send_command(b"26#ISR*")
-                    #time.sleep(0.3)
 
                 elif self.chessboardInstance.board.is_stalemate() or self.chessboardInstance.board.is_insufficient_material():
                     print("The game is a draw.")

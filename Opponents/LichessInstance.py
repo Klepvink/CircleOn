@@ -16,6 +16,8 @@ import env
 
 class LichessInstance:
     def __init__(self, chessboardInstance, squareoffInstance):
+
+        # Default settings
         self.uart_handler = None
         self.chessboardInstance = chessboardInstance
         self.squareoffInstance = squareoffInstance
@@ -29,10 +31,12 @@ class LichessInstance:
         self.lichessToken = env.LICHESS_TOKEN
         self.last_seen_move = None
 
+        # Set auth headers for use with Lichess
         self.headers = {
             "Authorization": f"Bearer {self.lichessToken}" 
         }
 
+        # Get ongoing games
         response = httpx.get(f'{self.baseUrl}/api/account/playing', headers=self.headers)
         ongoingGames = response.json()
 
@@ -40,7 +44,7 @@ class LichessInstance:
         self.gameState = self.mostRecent['fen']
         self.gameId = self.mostRecent['gameId']
 
-        
+        # Create event loop for keeping track of new moves in NDJSON-response        
         self.loop = asyncio.new_event_loop()
         self.move_ready_event = asyncio.Event()
         self.opponentMove = None
@@ -58,8 +62,12 @@ class LichessInstance:
 
         # Get PGN of selected game
         pgnResponse = httpx.get(f"{self.baseUrl}/game/export/{self.gameId}?evals=false", headers=self.headers)
-        pgn_io = io.StringIO(pgnResponse.text)
-        LichessGame = chess.pgn.read_game(pgn_io)
+        self.tempGame = chess.pgn.read_game(io.StringIO(pgnResponse.text))
+        self.lichessPgnHeaders = dict(self.tempGame.headers)
+
+        self.chessboardInstance.game.headers['White'] = self.lichessPgnHeaders['White']
+        self.chessboardInstance.game.headers['Black'] = self.lichessPgnHeaders['Black']
+        self.chessboardInstance.game.headers['Event'] = self.lichessPgnHeaders['Event']
 
         # Allow Lichess to overwrite the current chessboardInstance. Not as clean as i'd want it to be as
         # I would rather instantiate the chessboardInstance using the FEN instead of overwriting, but it
@@ -99,6 +107,14 @@ class LichessInstance:
                     data = httpx.Response(200, content=line).json()
 
                     if data["type"] in ["gameFull", "gameState"]:
+
+                        # Detect end of game due to other reasons then mate
+                        status = data.get("status")
+                        if status and status not in ("started", "created", "mate"):
+                            print(f"Game ended by Lichess. Status: {status}")
+                            await self.uart_handler.send_command(b"27#dw*\r\n")
+
+                        # Get made moves from gamestate
                         moves = data.get("state", {}).get("moves") if data["type"] == "gameFull" else data.get("moves")
                         if moves:
                             moves_list = moves.strip().split()
@@ -122,10 +138,7 @@ class LichessInstance:
     # Is called whenever engine needs to be aware of the new boardstate
     # Boardstate is a valid FEN-string (or UCI move)
 
-    def pass_boardstate(self, input_fen=None, input_move=None):
-        print(f"Lichess input fen: {input_fen}")
-        print(f"Lichess input move: {input_move}")
-     
+    def pass_boardstate(self, input_fen=None, input_move=None):     
         if input_fen:
             self.chessboardInstance.board.set_fen(input_fen)
 
@@ -153,6 +166,10 @@ class LichessInstance:
     # Input move is UCI-move.
     async def _pass_and_return(self, move):
         if move:
+            self.chessboardInstance.game.headers['White'] = self.lichessPgnHeaders['White']
+            self.chessboardInstance.game.headers['Black'] = self.lichessPgnHeaders['Black']
+            self.chessboardInstance.game.headers['Event'] = self.lichessPgnHeaders['Event']
+
             # Make change to chessboardInstance
             self.chessboardInstance.board.push_san(move)
             if self.chessboardInstance.current_node is not None:
