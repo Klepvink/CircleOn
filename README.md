@@ -4,7 +4,7 @@ CircleOn - Reverse-engineered communicator for the SquareOff Pro chessboard
 > This project is an independent open-source set of scripts and functions for integrating with the SquareOff Pro chessboard via BLE. It is not affiliated with nor endorsed by SquareOff and/or Miko.
 
 ## Why?
-These scripts were made to provide additional features to the SquareOff Pro chessboard that are not available in the application. It should provide a complete set of features which can be used to play OTB-games, play against Stockfish, fetch live game data for use with third party platforms (such as broadcasting on Lichess) and basic checks to verify the legitimacy of moves.
+These scripts were made to provide additional features to the SquareOff Pro chessboard that are not available in the application. It should provide a complete set of features which can be used to play OTB-games, play against Stockfish, Lichess support, fetch live game data for use with third party platforms (such as broadcasting on Lichess) and basic checks to verify the legitimacy of moves.
 
 In it's current form when ran from ```entrypoint.py```, it will do the following:
 - Start an over the board game or Stockfish game, depending on the setup in env.py.
@@ -17,13 +17,17 @@ Before you get started, install the requirements (```python3 -m pip install -r r
 ## Using the board
 When playing chess on the board, there are aome things to pay attention to while playing.
 - When moving a piece, pick the piece up and place it on the square you want it to move to. Sliding pieces can introduce false-positives.
-- When capturing, pick up both the piece you want to move, and the piece you want to capture, before placing down your moving piece. 
+- When capturing, pick up both the piece you want to move, and the piece you want to capture, before placing down your moving piece.  
 - When castling, move your king first before picking up your rook. The board will indicate where your rook needs to go after. Moving your rook first simply results in a rook move.
 - Promotions will be prompted in the terminal.
 
 
 ## Missing features
-Right now, ~~playing against an AI is not fully implemented~~, and third party integration was not taken into consideration when writing this. A basic stockfish implementation is included by default (provided by the stockfish python package). If you just want to play OTB, modify the ```env.py``` file. A Windows (.exe) version of Stockfish was used in this repo, however you can modify ```env.py``` to point to a Stockfish binary for your platform.
+Some comfort features are not properly implemented. Here are some notable missing features:
+- Dealing with other game-ending situations, such as resignations, accepted draws, timeouts or other situations that can occur that cause the game to end. This mostly relates to playing on online platforms.
+- The application currently provides no user-friendly interface, and is terminal only. There are plans to ultimately create something of a front-end, or even a raspberry pi-based device as a SquareOff companion, but for now the underlying codebase should be made stable first.
+- Some LED-controls that you would be used to in the SquareOff/Miko app is not yet implemented. Although it is possible, it has caused problems and will be implemented once everything is less prone to breaking.
+- There is currently no clock integration of any sorts.
 
 ## Important information
 BLEAK (https://github.com/hbldh/bleak )-example code is included in this code, especially a modified version of the ```UART_service.py``` example script. This was done to allow for the testing of commands sent to and from the board. If you run this script without modification, you can directly enter commands to send to the board in your terminal to test functionality.
