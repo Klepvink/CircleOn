@@ -45,7 +45,7 @@ async def uart_terminal():
         squareOffInstance = SquareOffInstance(chessboardInstance=chessboardInstance)
 
         # Instantiate the opponent, based on whether the player wants to play against stockfish, Lichess, or just OTB
-        if OpponentInstance:
+        if 'OpponentInstance' in globals():
             opponentInstance = OpponentInstance(chessboardInstance=chessboardInstance, squareoffInstance=squareOffInstance)
         else:
             opponentInstance = None
