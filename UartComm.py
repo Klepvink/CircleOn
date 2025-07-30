@@ -8,25 +8,16 @@ import time
 import chess
 import chess.pgn
 
+from ChessboardInstance import ChessboardInstance
+from SquareOffInstance import SquareOffInstance
+
 import GeneralHelpers
 import env
 
 class ChessBoardUARTHandler:
-    def __init__(self, client, rx_char, squareOffInstance, chessboardInstance, engineInstance):
+    def __init__(self, client, rx_char):
         self.client = client
         self.rx_char = rx_char
-
-        self.chessboardInstance = chessboardInstance
-
-        self.squareOffInstance = squareOffInstance
-        self.engineInstance = engineInstance
-
-        self.squareOffInstance.uart_handler = self
-
-        # Check if playing against the engine is expected
-        if len(self.squareOffInstance.bots) > 0:
-            self.squareOffInstance.engineInstance = self.engineInstance
-            self.engineInstance.uart_handler = self
 
     # Function is called on succesful connection to the SquareOff board.
     async def CommSuccess(self):
@@ -66,8 +57,8 @@ class ChessBoardUARTHandler:
             print(new_boardstate)
             # Communicate the new state of the board as presented by SquareOff to the engine, to allow the engine to light up
             # specific squares on the board.
-            if self.engineInstance:
-                self.engineInstance.originalBitboard = new_boardstate
+            if self.opponentInstance:
+                self.opponentInstance.originalBitboard = new_boardstate
 
             # Calls the function responsible for converting the SquareOff occupation string to a valid move
             madeMove = await self.squareOffInstance.find_uci_move(new_board_bits=new_boardstate)                
@@ -120,3 +111,37 @@ class ChessBoardUARTHandler:
 
         print("Checking board setup...")
         await self.send_command(b"30#R*\r\n")
+    
+    async def start_game(self):
+        self.chessboardInstance = ChessboardInstance(initial_fen=env.STARTING_FEN)
+        self.squareOffInstance = SquareOffInstance(chessboardInstance=self.chessboardInstance)
+
+        self.OpponentInstance = None
+
+        # Instantiate the opponent, based on whether the player wants to play against stockfish, Lichess, or just OTB
+        # Detect what game should be played, and prevent unneeded imports
+        if env.PLAY_LICHESS_GAME:
+            from Opponents.LichessInstance import LichessInstance
+            self.OpponentInstance = LichessInstance
+        elif len(env.ENGINE_PLAYERS) > 0:
+            from Opponents.EngineInstance import EngineInstance
+            self.OpponentInstance = EngineInstance
+
+
+        if self.OpponentInstance:
+            self.opponentInstance = self.OpponentInstance(chessboardInstance=self.chessboardInstance, squareoffInstance=self.squareOffInstance)
+        else:
+            self.opponentInstance = None
+
+        self.squareOffInstance.uart_handler = self
+
+        # Check if playing against the engine is expected
+        if len(self.squareOffInstance.bots) > 0:
+            self.squareOffInstance.engineInstance = self.opponentInstance
+            self.opponentInstance.uart_handler = self
+
+        await self.CommSuccess()
+        await self.send_game_start_sequence()
+
+        # First move, check to see who's turn it is
+        await self.squareOffInstance.check_turn()

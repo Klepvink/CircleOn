@@ -4,18 +4,10 @@ from bleak import BleakClient, BleakScanner
 
 # CircleOn specific imports, such as helper functions and the python-chess instance
 from GeneralHelpers import UART_SERVICE_UUID, UART_TX_CHAR_UUID, UART_RX_CHAR_UUID, sliced
-from SquareOffInstance import SquareOffInstance
 from UartComm import ChessBoardUARTHandler
-from ChessboardInstance import ChessboardInstance
 
 # General settings for the application
 import env
-
-# Detect what game should be played, and prevent unneeded imports
-if env.PLAY_LICHESS_GAME:
-    from Opponents.LichessInstance import LichessInstance as OpponentInstance
-elif len(env.ENGINE_PLAYERS) > 0:
-    from Opponents.EngineInstance import EngineInstance as OpponentInstance
 
 async def uart_terminal():
 
@@ -38,31 +30,12 @@ async def uart_terminal():
         nus = client.services.get_service(UART_SERVICE_UUID)
         rx_char = nus.get_characteristic(UART_RX_CHAR_UUID)
 
-        # Instantiate the class responsible for keeping track of made and legal moves
-        chessboardInstance = ChessboardInstance(initial_fen=env.STARTING_FEN)
-
-        # Instantiate the class responsible for operating and keeping track of the SquareOff Pro board
-        squareOffInstance = SquareOffInstance(chessboardInstance=chessboardInstance)
-
-        # Instantiate the opponent, based on whether the player wants to play against stockfish, Lichess, or just OTB
-        if 'OpponentInstance' in globals():
-            opponentInstance = OpponentInstance(chessboardInstance=chessboardInstance, squareoffInstance=squareOffInstance)
-        else:
-            opponentInstance = None
-
         # Instantiate the UART communicator, responsible for performing activities with changes on the board
-        handler = ChessBoardUARTHandler(client=client, rx_char=rx_char, 
-                                        squareOffInstance=squareOffInstance, 
-                                        chessboardInstance=chessboardInstance, 
-                                        engineInstance=opponentInstance)
+        handler = ChessBoardUARTHandler(client=client, rx_char=rx_char)
 
         await client.start_notify(UART_TX_CHAR_UUID, handler.handle_rx)
         
-        await handler.CommSuccess()
-        await handler.send_game_start_sequence()
-
-        # First move, check to see who's turn it is
-        await squareOffInstance.check_turn()
+        await handler.start_game()
 
         loop = asyncio.get_running_loop()
         while True:
