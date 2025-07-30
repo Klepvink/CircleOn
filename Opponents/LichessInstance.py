@@ -65,16 +65,16 @@ class LichessInstance:
         self.tempGame = chess.pgn.read_game(io.StringIO(pgnResponse.text))
         self.lichessPgnHeaders = dict(self.tempGame.headers)
 
-        self.chessboardInstance.game.headers['White'] = self.lichessPgnHeaders['White']
-        self.chessboardInstance.game.headers['Black'] = self.lichessPgnHeaders['Black']
-        self.chessboardInstance.game.headers['Event'] = self.lichessPgnHeaders['Event']
-
         # Allow Lichess to overwrite the current chessboardInstance. Not as clean as i'd want it to be as
         # I would rather instantiate the chessboardInstance using the FEN instead of overwriting, but it
         # should work reliably.
 
         self.chessboardInstance.board = chess.Board(fen=self.gameState)
         self.chessboardInstance.game = chess.pgn.Game.from_board(self.chessboardInstance.board)
+
+        self.chessboardInstance.game.headers['White'] = self.lichessPgnHeaders['White']
+        self.chessboardInstance.game.headers['Black'] = self.lichessPgnHeaders['Black']
+        self.chessboardInstance.game.headers['Event'] = self.lichessPgnHeaders['Event']
 
         if self.chessboardInstance.board.turn == chess.WHITE:
             self.squareoffInstance.turn = "white"
@@ -166,9 +166,6 @@ class LichessInstance:
     # Input move is UCI-move.
     async def _pass_and_return(self, move):
         if move:
-            self.chessboardInstance.game.headers['White'] = self.lichessPgnHeaders['White']
-            self.chessboardInstance.game.headers['Black'] = self.lichessPgnHeaders['Black']
-            self.chessboardInstance.game.headers['Event'] = self.lichessPgnHeaders['Event']
 
             # Make change to chessboardInstance
             self.chessboardInstance.board.push_san(move)
