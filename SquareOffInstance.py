@@ -4,7 +4,7 @@ preventing false positives.
 """
 
 import chess
-from time import sleep
+import asyncio
 
 import GeneralHelpers as GeneralHelpers 
 import env
@@ -31,10 +31,9 @@ class SquareOffInstance:
 
     async def lightNonmatchingSquares(self, new_boardstate):
         if not self.set_castling_move:
-            # Red status LED. It technically works, but it causes too many problems to permanently introduce at this point
-            #await self.uart_handler.send_command(b"26#ISR*")
-            #sleep(0.3)
-            print("Status - RED")
+            await asyncio.sleep(0.3)
+            await self.uart_handler.send_command(b"26#ISR*")
+            await asyncio.sleep(0.3)
     
         diff_squares = GeneralHelpers.bitboard_index_to_squares([i for i in range(len(new_boardstate)) if new_boardstate[i] != self.chessboardInstance.board_to_occupation_string()[i]])
         print(diff_squares)

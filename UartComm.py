@@ -7,6 +7,7 @@ of the board being communicated).
 import time
 import chess
 import chess.pgn
+import asyncio
 
 from ChessboardInstance import ChessboardInstance
 from SquareOffInstance import SquareOffInstance
@@ -77,8 +78,10 @@ class ChessBoardUARTHandler:
             # If boardstates are matching (physical and ChessboardInstance, check if game is over). This is done here, to prevent
             # a winner being indicated prematurely.
             if (new_boardstate == self.chessboardInstance.board_to_occupation_string()):
-                #await self.send_command(b"26#ISG*")
-                #time.sleep(0.3)
+                await asyncio.sleep(0.3)
+                await self.send_command(b"26#ISG*")
+                await asyncio.sleep(0.3)
+                
                 pgn_text = self.chessboardInstance.game.accept(chess.pgn.StringExporter(headers=True, variations=True, comments=True))
 
                 if env.ENABLE_LICHESS_BROADCAST:
