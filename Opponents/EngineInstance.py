@@ -57,5 +57,5 @@ class EngineInstance:
                 diff_squares.append(move)
 
             # Send LED-command to SquareOff
-            await self.uart_handler.send_command(f"25#{"".join(diff_squares)}*".encode())
+            await self.uart_handler.send_command(f"25#{''.join(diff_squares)}*".encode())
             diff_squares = []
